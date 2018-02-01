@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="AOI_LIB.cpp" />
+    <ClCompile Include="src\utility\logFile.cpp">
+      <Filter>src\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\screen_index.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\screen_type.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utility\random.cpp">
+      <Filter>src\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\index_scene.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{816223c2-38f8-4488-b085-7f33b18a9f6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\utility">
+      <UniqueIdentifier>{772c23ec-5f63-4103-905b-8691defea483}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\utility\logFile.h">
+      <Filter>src\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="config.h" />
+    <ClInclude Include="src\utility\typedef.h">
+      <Filter>src\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="src\screen_index.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\screen_type.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\algorithm.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\index_scene.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utility\random.h">
+      <Filter>src\utility</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
