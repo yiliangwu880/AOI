@@ -1,0 +1,6 @@
+[submodule "svr_util"]
+	path = svr_util
+	url = https://github.com/yiliangwu880/svr_util.git
+[submodule "external/svr_util"]
+	path = external/svr_util
+	url = https://github.com/yiliangwu880/svr_util.git
