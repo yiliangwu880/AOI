@@ -1,13 +1,19 @@
 
 
-#include "screen_index.h"
+#include "GridIdxMgr.h"
 #include "stdlib.h"
-#include "utility.h"
+#include "log_def.h"
 
 using namespace aoi;
 
+namespace aoi{
 
-ScreenIndexBase::ScreenIndexBase()
+
+
+}
+
+
+GridIdxMgr::GridIdxMgr()
 	:m_ninescreen()
 {	
 	initScreenIndex();
@@ -15,7 +21,7 @@ ScreenIndexBase::ScreenIndexBase()
 
 
 
-bool ScreenIndexBase::initScreenIndex()
+bool GridIdxMgr::initScreenIndex()
 {
 	const int adjust[9][2] = { {0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, 0} };
 	//预先建立地图九屏索引
@@ -89,12 +95,12 @@ bool ScreenIndexBase::initScreenIndex()
 	return true;
 } 
 
-bool ScreenIndexBase::checkTwoPosIInNine(const uint16_t &posIOne, const uint16_t &posITwo, const uint8_t &direct)
+bool GridIdxMgr::checkTwoPosIInNine(const uint16_t &posIOne, const uint16_t &posITwo, const uint8_t &direct)
 {
 	return (m_ninescreen[posIOne][direct] == posITwo);
 }
 
-bool ScreenIndexBase::checkTwoPosIInNine(const uint16_t one, const uint16_t two)
+bool GridIdxMgr::checkTwoPosIInNine(const uint16_t one, const uint16_t two)
 {   
 	int oneX, oneY , twoX ,twoY;
 	oneX = one % MAP_SCREEN_X;   
@@ -108,7 +114,7 @@ bool ScreenIndexBase::checkTwoPosIInNine(const uint16_t one, const uint16_t two)
 	return false;   
 } 
 
-uint8_t ScreenIndexBase::getScreenDirect(const uint16_t posiorg, const uint16_t posinew)
+uint8_t GridIdxMgr::getScreenDirect(const uint16_t posiorg, const uint16_t posinew)
 {
 	static uint8_t dir[3][3] = 
 	{
@@ -125,7 +131,7 @@ uint8_t ScreenIndexBase::getScreenDirect(const uint16_t posiorg, const uint16_t 
 	return dir[diff_X][diff_Y];
 }
 
-const VecGridIdx &ScreenIndexBase::getNineScreen(const uint16_t &posi) const
+const VecGridIdx &GridIdxMgr::getNineScreen(const uint16_t &posi) const
 {
 	L_ASSERT((uint32_t)posi < MAP_SCREEN_MAX);
 
@@ -138,7 +144,7 @@ const VecGridIdx &ScreenIndexBase::getNineScreen(const uint16_t &posi) const
 	return *(VecGridIdx*)nullptr;
 }
 
-const VecGridIdx &ScreenIndexBase::getDirectScreen(const uint16_t &posi, const int &dir) 
+const VecGridIdx &GridIdxMgr::getDirectScreen(const uint16_t &posi, const int &dir) 
 {
 	L_ASSERT((uint32_t)posi < MAP_SCREEN_MAX);
 	L_ASSERT(dir < DirType_Wrong);
@@ -154,7 +160,7 @@ const VecGridIdx &ScreenIndexBase::getDirectScreen(const uint16_t &posi, const i
 	return m_direct_screen[dir][(uint32_t)-1];
 }
 
-const VecGridIdx &ScreenIndexBase::getReverseDirectScreen(const uint16_t &posi, const int &dir) 
+const VecGridIdx &GridIdxMgr::getReverseDirectScreen(const uint16_t &posi, const int &dir) 
 {
 	L_ASSERT((uint32_t)posi < MAP_SCREEN_MAX);
 	L_ASSERT(dir < DirType_Wrong);
@@ -170,7 +176,7 @@ const VecGridIdx &ScreenIndexBase::getReverseDirectScreen(const uint16_t &posi, 
 	return m_reverse_direct_screen[dir][(uint32_t)-1];
 }
 
-void ScreenIndexBase::printAllDirectScreen(const uint16_t &posi)
+void GridIdxMgr::printAllDirectScreen(const uint16_t &posi)
 {
 	L_DEBUG("前向屏 [%u]", posi);
 	for(uint32_t i = 0; i<DirType_Wrong; ++ i)
@@ -187,7 +193,7 @@ void ScreenIndexBase::printAllDirectScreen(const uint16_t &posi)
 	}
 }
 
-void aoi::ScreenIndexBase::printAllReverseDirectScreen(const uint16_t &posi)
+void aoi::GridIdxMgr::printAllReverseDirectScreen(const uint16_t &posi)
 {
 	L_DEBUG("前向屏 [%u]", posi);
 	for (uint32_t i = 0; i < DirType_Wrong; ++i)

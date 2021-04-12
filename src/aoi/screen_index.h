@@ -4,17 +4,41 @@
 #include <map>
 #include <vector>
 #include <unordered_map>
-#include "utility.h"
 
 namespace aoi
 {
+	static const uint16_t SCREEN_GRID_WIDTH = 22;		///< grid宽,单位 point
+	static const uint16_t SCREEN_GRID_HEIGHT = 14;		///< grid高,单位 point
+	//2048, 2048//最大地图,单位 point
+	static const uint16_t MAP_MAX_POS_X = 2200;
+	static const uint16_t MAP_MAX_POS_Y = 2048;
+
+	//map的最大长度，单位grid
+	static const uint16_t MAP_SCREEN_X = (MAP_MAX_POS_X + SCREEN_GRID_WIDTH - 1) / SCREEN_GRID_WIDTH;
+	static const uint16_t MAP_SCREEN_Y = (MAP_MAX_POS_Y + SCREEN_GRID_HEIGHT - 1) / SCREEN_GRID_HEIGHT;
+	static const uint32_t MAP_SCREEN_MAX = MAP_SCREEN_X * MAP_SCREEN_Y + 1;//map 的最大grid数
+
+	typedef std::vector<uint16_t> VecGridIdx;
+	enum DirType
+	{
+		DirType_Up = 0,	/// 向上
+		DirType_RightUp = 1,	/// 右上
+		DirType_Right = 2,	/// 向右
+		DirType_RightDown = 3,	/// 右下
+		DirType_Down = 4,	/// 向下
+		DirType_LeftDown = 5,	/// 左下
+		DirType_Left = 6,	/// 向左
+		DirType_LeftUp = 7,	/// 左上
+		DirType_Wrong = 8,	/// 错误方向
+		DirType_Random = 8,	/// 随机方向
+	};
 
 	//@brief	九屏关系容器
 	typedef std::unordered_map<uint32_t, VecGridIdx> NineScreenMap;
 	//@brief	九屏关系容器迭代器
 	typedef NineScreenMap::iterator NineScreenMap_iter;
 	//@brief	屏索引
-	class ScreenIndexBase : public Singleton<ScreenIndexBase>
+	class GridIdxMgr 
 	{
 		//@brief	九屏索引  m_ninescreen[uint16_t] 为uint16_t为中心的9个uint16_t
 		 VecGridIdx m_ninescreen[MAP_SCREEN_MAX];
@@ -24,7 +48,14 @@ namespace aoi
 		 NineScreenMap m_reverse_direct_screen[8];
 
 	public:
-		ScreenIndexBase();
+		static GridIdxMgr& Ins()
+		{
+			static GridIdxMgr obj;
+			return obj;
+		}
+
+	private:
+		GridIdxMgr();
 
 	public:
 		//@brief	初始化屏关系
@@ -66,4 +97,61 @@ namespace aoi
 		 void printAllReverseDirectScreen(const uint16_t &posi);
 
 	};
+
+
+	template <typename T, typename Alloc>
+	inline void SimpleRemoveFromVec(std::vector<T, Alloc >& vec, T val)
+	{
+		for (typename std::vector<T, Alloc >::iterator iter = vec.begin(); iter != vec.end(); ++iter)
+		{
+			if (*iter == val)
+			{
+				*iter = vec.back();
+				vec.erase(vec.end() - 1);
+				return;
+			}
+		}
+	}
+
+	template <typename T, typename Alloc>
+	inline void SimpleRemoveFromVec(std::vector<T, Alloc >& vec, size_t index)
+	{
+		vec[index] = vec[vec.size() - 1];
+		vec.erase(vec.end() - 1);
+	}
+
+	template <typename T, typename Alloc>
+	inline void SimpleRemoveFromVec(std::vector<T, Alloc >& vec, typename std::vector<T, Alloc >::iterator it)
+	{
+		*it = vec.back();
+		vec.erase(vec.end() - 1);
+	}
+
+	template <typename T>
+	inline void SimpleRemoveFromVec(std::vector<T>& vec, T val)
+	{
+		for (typename std::vector<T>::iterator iter = vec.begin(); iter != vec.end(); ++iter)
+		{
+			if (*iter == val)
+			{
+				*iter = vec.back();
+				vec.erase(vec.end() - 1);
+				return;
+			}
+		}
+	}
+
+	template <typename T>
+	inline void SimpleRemoveFromVec(std::vector<T>& vec, size_t index)
+	{
+		vec[index] = vec[vec.size() - 1];
+		vec.erase(vec.end() - 1);
+	}
+
+	template <typename T>
+	inline void SimpleRemoveFromVec(std::vector<T>& vec, typename std::vector<T>::iterator it)
+	{
+		*it = vec.back();
+		vec.erase(vec.end() - 1);
+	}
 }
