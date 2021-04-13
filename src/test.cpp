@@ -8,7 +8,6 @@
 using namespace std;
 using namespace aoi;
 
-#if 0
 
 UNITTEST(tool_test)
 {
@@ -234,8 +233,6 @@ UNITTEST(test_limit_xy)
 	delete scene;
 }
 
-#endif
-
 //测试 一些坐标转换位置
 UNITTEST(pos_cal)
 {
@@ -289,19 +286,55 @@ UNITTEST(enter_update)
 
 	mgr->m_id2Player.insert(make_pair(1, Player(1)));
 	mgr->m_id2Player.insert(make_pair(2, Player(2)));
+	mgr->m_id2Player.insert(make_pair(3, Player(3)));
 
 	mgr->GetPlayer(1)->Enter(*scene, x, y);
-	mgr->GetPlayer(2)->Enter(*scene, x+ SCREEN_GRID_WIDTH, y);
+	mgr->GetPlayer(2)->Enter(*scene, x + SCREEN_GRID_WIDTH, y);
+	mgr->GetPlayer(3)->Enter(*scene, x + SCREEN_GRID_WIDTH*3, y);
+
+	UNIT_ASSERT(mgr->Check(1) == 1);
+	UNIT_ASSERT(mgr->Check(2) == 1);
+	UNIT_ASSERT(mgr->Check(3) == 0);
+
+	mgr->GetPlayer(1)->UpdateXY(x, y);
+	mgr->GetPlayer(2)->UpdateXY(x, y);
+	mgr->GetPlayer(3)->UpdateXY(x, y);
+	UNIT_ASSERT(mgr->Check(1) == 2);
+	UNIT_ASSERT(mgr->Check(2) == 2);
+	UNIT_ASSERT(mgr->Check(3) == 2);
+
+	//站位 ：对角线排列 
+	mgr->GetPlayer(1)->UpdateXY(x + SCREEN_GRID_WIDTH, y+ SCREEN_GRID_HEIGHT);
+	mgr->GetPlayer(2)->UpdateXY(x , y );
+	mgr->GetPlayer(3)->UpdateXY(x - SCREEN_GRID_WIDTH , y - SCREEN_GRID_HEIGHT);
+	UNIT_ASSERT(mgr->Check(1) == 1);
+	UNIT_ASSERT(mgr->Check(2) == 2);
+	UNIT_ASSERT(mgr->Check(3) == 1);
+
+	mgr->Check();
+}
+
+
+//尝试重现
+UNITTEST(test_update)
+{
+	GameScene *scene = new GameScene();
+	PlayerMgr *mgr = new PlayerMgr();
+
+	mgr->m_id2Player.insert(make_pair(1, Player(1)));
+	mgr->m_id2Player.insert(make_pair(2, Player(2)));
+	mgr->m_id2Player.insert(make_pair(3, Player(3)));
+
+	mgr->GetPlayer(1)->Enter(*scene, 0, 0);
+	mgr->GetPlayer(2)->Enter(*scene, 0, 0);
+	mgr->GetPlayer(3)->Enter(*scene, 0, 0);
 
 	mgr->Check();
 
-	mgr->GetPlayer(2)->UpdateXY(x + SCREEN_GRID_WIDTH, y+ SCREEN_GRID_HEIGHT);
-
+	mgr->GetPlayer(1)->UpdateXY(277, 1881);//12 134
+	mgr->GetPlayer(2)->UpdateXY(304, 1870);//13 133
+	mgr->GetPlayer(3)->UpdateXY(304, 1870 - SCREEN_GRID_HEIGHT);
 	mgr->Check();
-
-	mgr->GetPlayer(2)->UpdateXY(x + SCREEN_GRID_WIDTH*3, y + SCREEN_GRID_HEIGHT);
-
-
 }
 
 //测试 随机进入场景， 9格子可视 关系正确

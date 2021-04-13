@@ -120,6 +120,7 @@ bool aoi::Scene::EntityEnter(Entity &entity)
 	{
 		for (Entity *otherEntity : m_idx2VecEntity[v])
 		{
+			L_ASSERT(otherEntity != &entity);
 			otherEntity->AddObserver(entity);
 			entity.AddObserver(*otherEntity);
 		}
@@ -141,19 +142,20 @@ bool aoi::Scene::EntityLeave(Entity &entity)
 	m_isFreeze = true;
 	uint16_t gridIdx = entity.GridIdx();
 
+	VecEntity &vecEntity = m_idx2VecEntity[gridIdx];
+	SimpleRemoveFromVec(vecEntity, &entity);
+	entity.SetScene(nullptr);
+
 	const VecGridIdx &ninescreen = GridIdxMgr::Ins().Get9Grid(gridIdx);
 	for (const uint16_t &v : ninescreen)
 	{
-		for (Entity *otherEntity : m_idx2VecEntity[gridIdx])
+		for (Entity *otherEntity : m_idx2VecEntity[v])
 		{
+			L_ASSERT(otherEntity != &entity);
 			otherEntity->DelObserver(entity);
 			entity.DelObserver(*otherEntity);
 		}
 	}
-
-	VecEntity &vecEntity = m_idx2VecEntity[gridIdx];
-	SimpleRemoveFromVec(vecEntity, &entity);
-	entity.SetScene(nullptr);
 
 	m_isFreeze = false;
 	return true;
@@ -169,11 +171,13 @@ bool aoi::Scene::UpdateEntity(Entity &entity, uint16_t oldGridIdx, uint16_t newG
 	{
 		uint8_t dir = GridIdxMgr::Ins().getScreenDirect(oldGridIdx, newGridIdx);
 		{
+			SimpleRemoveFromVec(m_idx2VecEntity[oldGridIdx], &entity);
 			const VecGridIdx &vecGridIdx = GridIdxMgr::Ins().getReverseDirectScreen(oldGridIdx, dir);
-			for (uint16_t gridIdx : vecGridIdx)
+			for (uint16_t v : vecGridIdx)
 			{
-				for (Entity *otherEntity : m_idx2VecEntity[gridIdx])
+				for (Entity *otherEntity : m_idx2VecEntity[v])
 				{
+					L_ASSERT(otherEntity != &entity);
 					otherEntity->DelObserver(entity);
 					entity.DelObserver(*otherEntity);
 				}
@@ -181,39 +185,48 @@ bool aoi::Scene::UpdateEntity(Entity &entity, uint16_t oldGridIdx, uint16_t newG
 		}
 		{
 			const VecGridIdx &vecGridIdx = GridIdxMgr::Ins().getDirectScreen(newGridIdx, dir);
-			for (uint16_t gridIdx : vecGridIdx)
+			for (uint16_t v : vecGridIdx)
 			{
-				for (Entity *otherEntity : m_idx2VecEntity[gridIdx])
+				for (Entity *otherEntity : m_idx2VecEntity[v])
 				{
+					L_ASSERT(otherEntity != &entity);
 					otherEntity->AddObserver(entity);
 					entity.AddObserver(*otherEntity);
 				}
 			}
+			m_idx2VecEntity[newGridIdx].push_back(&entity);
 		}
 	}
 	else
 	{
 		{
+			SimpleRemoveFromVec(m_idx2VecEntity[oldGridIdx], &entity);
 			const VecGridIdx &vecGridIdx = GridIdxMgr::Ins().Get9Grid(oldGridIdx);
-			for (uint16_t gridIdx : vecGridIdx)
+			for (uint16_t v : vecGridIdx)
 			{
-				for (Entity *otherEntity : m_idx2VecEntity[gridIdx])
+				for (Entity *otherEntity : m_idx2VecEntity[v])
 				{
+					L_ASSERT(otherEntity != &entity);
 					otherEntity->DelObserver(entity);
 					entity.DelObserver(*otherEntity);
 				}
 			}
 		}
 		{
+			//L_DEBUG("%p newGridIdx=%d", &entity, newGridIdx);
 			const VecGridIdx &vecGridIdx = GridIdxMgr::Ins().Get9Grid(newGridIdx);
-			for (uint16_t gridIdx : vecGridIdx)
+			//L_DEBUG("9 grid size=%d", vecGridIdx.size());
+			for (uint16_t v : vecGridIdx)
 			{
-				for (Entity *otherEntity : m_idx2VecEntity[gridIdx])
+				for (Entity *otherEntity : m_idx2VecEntity[v])
 				{
+					//L_DEBUG("see eachother =%p %p", &entity, otherEntity);
+					L_ASSERT(otherEntity != &entity);
 					otherEntity->AddObserver(entity);
 					entity.AddObserver(*otherEntity);
 				}
 			}
+			m_idx2VecEntity[newGridIdx].push_back(&entity);
 		}
 	}
 

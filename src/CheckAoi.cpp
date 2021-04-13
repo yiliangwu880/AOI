@@ -220,13 +220,40 @@ uint32_t PlayerMgr::Check(Player &player)
 		player.m_entity.ForEachObservers(f);
 	}
 	uint32_t cnt = 0;
-	for (aoi::Entity *entity : g_set)
+	for (aoi::Entity *g_entity : g_set)
 	{
-		if (entity == &player.m_entity)
+		if (g_entity == &player.m_entity)
 		{
 			continue;
 		}
-		UNIT_ASSERT(aoi_set.find(entity) != aoi_set.end());
+
+		{//for test
+			if (aoi_set.find(g_entity) == aoi_set.end())//when error
+			{
+				UNIT_INFO("player id=%d, gridIdx=%d x,y=%d, %d", player.m_id, player.m_entity.GridIdx(), player.m_x, player.m_y);
+				uint16_t x, y;
+				Check::Ins().GetGridXY(player.m_entity.GridIdx(), x, y);
+				UNIT_INFO("gridXY = %d %d", x, y);
+				//UNIT_INFO("aoi_set size, g_set size=%d %d", aoi_set.size(), g_set.size());
+
+				SceneEntity *sceneEntity = dynamic_cast<SceneEntity *>(g_entity);
+				//UNIT_INFO("g_set entity scene = %p", sceneEntity->GetScene());
+				UNIT_INFO("g_set entity id=%d, gridIdx=%d x,y=%d, %d", sceneEntity->m_owner.m_id, g_entity->GridIdx(), sceneEntity->m_owner.m_x, sceneEntity->m_owner.m_y);
+				Check::Ins().GetGridXY(g_entity->GridIdx(), x, y);
+				UNIT_INFO("gridXY = %d %d", x, y);
+				//UNIT_INFO("g_set player  = %p", &sceneEntity->m_owner);
+
+				for (aoi::Entity *aoi_entity : aoi_set)
+				{
+					SceneEntity *sceneEntity = dynamic_cast<SceneEntity *>(aoi_entity);
+					UNIT_INFO("aoi entity id=%d, gridIdx=%d x,y=%d, %d", sceneEntity->m_owner.m_id, aoi_entity->GridIdx(), sceneEntity->m_owner.m_x, sceneEntity->m_owner.m_y);
+					uint16_t x, y;
+					Check::Ins().GetGridXY(aoi_entity->GridIdx(), x, y);
+					UNIT_INFO("gridXY = %d %d", x, y);
+				}
+			}	
+		}
+		UNIT_ASSERT(aoi_set.find(g_entity) != aoi_set.end());
 		cnt++;
 	}
 	UNIT_ASSERT(aoi_set.size() == cnt);
