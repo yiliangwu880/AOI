@@ -1,8 +1,8 @@
 
 
 #include "unit_test.h"
-#include "aoi/Scene.h"
-#include "aoi/screen_index.h"
+#include "aoi/aoi.h"
+#include "aoi/GridIdxMgr.h"
  
 using namespace std;
 using namespace aoi;
@@ -15,8 +15,8 @@ int main(int argc, char* argv[])
 
 UNITTEST(tt)
 {
-	ScreenIndexBase::Ins().initScreenIndex();
-	ScreenIndexBase::Ins().printAllDirectScreen(450);
-	UNIT_INFO("ddddddddddddddddddd");
-	ScreenIndexBase::Ins().printAllReverseDirectScreen(450);
+	//GridIdxMgr::Ins().initScreenIndex();
+	//GridIdxMgr::Ins().printAllDirectScreen(450);
+	//UNIT_INFO("ddddddddddddddddddd");
+	//GridIdxMgr::Ins().printAllReverseDirectScreen(450);
 }

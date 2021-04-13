@@ -1,16 +1,9 @@
 
-
 #include "GridIdxMgr.h"
 #include "stdlib.h"
 #include "log_def.h"
 
 using namespace aoi;
-
-namespace aoi{
-
-
-
-}
 
 
 GridIdxMgr::GridIdxMgr()
@@ -18,8 +11,6 @@ GridIdxMgr::GridIdxMgr()
 {	
 	initScreenIndex();
 }
-
-
 
 bool GridIdxMgr::initScreenIndex()
 {
@@ -131,7 +122,7 @@ uint8_t GridIdxMgr::getScreenDirect(const uint16_t posiorg, const uint16_t posin
 	return dir[diff_X][diff_Y];
 }
 
-const VecGridIdx &GridIdxMgr::getNineScreen(const uint16_t &posi) const
+const VecGridIdx &GridIdxMgr::Get9Grid(const uint16_t &posi) const
 {
 	L_ASSERT((uint32_t)posi < MAP_SCREEN_MAX);
 
