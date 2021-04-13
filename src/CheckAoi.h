@@ -23,10 +23,13 @@ public:
 
 	uint16_t GetGridIdx(uint16_t x, uint16_t y);
 
+	uint16_t GetGridIdxByGridXY(uint16_t gridX, uint16_t gridY);
+
 	VecGridIdx Get9Grid(uint16_t idx);
 	VecGridIdx Get9Grid(uint16_t x, uint16_t y);
 
-	void GetGridXY(uint16_t idx, uint16_t &nScreenX, uint16_t &nScreenY);
+	void GetGridXY(uint16_t idx, uint16_t &gridX, uint16_t &gridY);
+	void GetGridXY(uint16_t x, uint16_t y, uint16_t &gridX, uint16_t &gridY);
 
 	//2idx为中心的grid比较，获取差异信息
 	void Compare(uint16_t oldGridIdx, uint16_t newGridIdx, GridCompareResult &ret);

@@ -18,14 +18,14 @@ bool GridIdxMgr::initScreenIndex()
 	//预先建立地图九屏索引
 	for(uint32_t j=0; j < MAP_SCREEN_MAX ; j ++)
 	{
-		int nScreenX = j % MAP_SCREEN_X;
-		int nScreenY = j / MAP_SCREEN_X;
+		int gridX = j % MAP_SCREEN_X;
+		int gridY = j / MAP_SCREEN_X;
 		//计算周围九屏
 		{
 			VecGridIdx pv;
 			for(int i = 0; i < 9; i++) {
-				int x = nScreenX + adjust[i][0];
-				int y = nScreenY + adjust[i][1];
+				int x = gridX + adjust[i][0];
+				int y = gridY + adjust[i][1];
 				if(x >= 0 && y >= 0 && x < (int)MAP_SCREEN_X && y < (int)MAP_SCREEN_Y) {
 					pv.push_back(y * MAP_SCREEN_X + x); 
 				} 
@@ -49,8 +49,8 @@ bool GridIdxMgr::initScreenIndex()
 				end = 9;
 			}
 			for(int i = start; i <= end; i++) {
-				int x = nScreenX + adjust[(i + dir) % 8][0];
-				int y = nScreenY + adjust[(i + dir) % 8][1];
+				int x = gridX + adjust[(i + dir) % 8][0];
+				int y = gridY + adjust[(i + dir) % 8][1];
 				if(x >= 0 && y >= 0 && x < (int)MAP_SCREEN_X && y < (int)MAP_SCREEN_Y) {
 					pv.push_back(y * MAP_SCREEN_X + x);
 				}
@@ -74,8 +74,8 @@ bool GridIdxMgr::initScreenIndex()
 				end = 5;
 			}
 			for(int i = start; i <= end; i++) {
-				int x = nScreenX + adjust[(i + dir) % 8][0];
-				int y = nScreenY + adjust[(i + dir) % 8][1];
+				int x = gridX + adjust[(i + dir) % 8][0];
+				int y = gridY + adjust[(i + dir) % 8][1];
 				if(x >= 0 && y >= 0 && x < (int)MAP_SCREEN_X && y < (int)MAP_SCREEN_Y) {
 					pv.push_back(y * MAP_SCREEN_X + x);
 				}

@@ -37,7 +37,6 @@ bool aoi::Entity::Leave(Scene &scene)
 
 void aoi::Entity::AddObserver(Entity &entity)
 {
-	L_DEBUG("AddObserver %p + %p", this, &entity);
 	m_observers.insert(&entity);
 	OnAddObserver(entity);
 }

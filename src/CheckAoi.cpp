@@ -15,16 +15,28 @@ uint16_t Check::GetGridIdx(uint16_t x, uint16_t y)
 	return (MAP_SCREEN_X * (y / SCREEN_GRID_HEIGHT) + (x / SCREEN_GRID_WIDTH));
 }
 
-void Check::GetGridXY(uint16_t idx, uint16_t &nScreenX, uint16_t &nScreenY)
+uint16_t Check::GetGridIdxByGridXY(uint16_t gridX, uint16_t gridY)
+{
+	return gridY * MAP_SCREEN_X + gridX;
+}
+
+void Check::GetGridXY(uint16_t idx, uint16_t &gridX, uint16_t &gridY)
 {
 	if (idx >= MAP_SCREEN_MAX)
 	{
 		UNIT_ERROR("idx overload %d", idx);
 		return;
 	}
-	nScreenY = idx / MAP_SCREEN_X;
-	nScreenX = idx % MAP_SCREEN_X;
+	gridY = idx / MAP_SCREEN_X;
+	gridX = idx % MAP_SCREEN_X;
 }
+
+void Check::GetGridXY(uint16_t x, uint16_t y, uint16_t &gridX, uint16_t &gridY)
+{
+	uint16_t idx = GetGridIdx(x, y);
+	GetGridXY(idx, gridX, gridY);
+}
+
 aoi::VecGridIdx Check::Get9Grid(uint16_t idx)
 {
 	VecGridIdx vec;
@@ -33,9 +45,9 @@ aoi::VecGridIdx Check::Get9Grid(uint16_t idx)
 		UNIT_ERROR("idx overload %d", idx);
 		return vec;
 	}
-	int nScreenX, nScreenY;
-	nScreenY = idx / MAP_SCREEN_X;
-	nScreenX = idx % MAP_SCREEN_X;
+	int gridX, gridY;
+	gridY = idx / MAP_SCREEN_X;
+	gridX = idx % MAP_SCREEN_X;
 	
 	//UNIT_INFO("xIdx,yIdx=%d %d --%d (%d %d)", xIdx, yIdx, idx, MAP_SCREEN_X, MAP_SCREEN_Y);
 	//9¸ñ
@@ -43,22 +55,22 @@ aoi::VecGridIdx Check::Get9Grid(uint16_t idx)
 	{
 		for (int y = -1; y < 2; y++)
 		{
-			if (nScreenX + x < 0)
+			if (gridX + x < 0)
 			{
 				continue;
 			}
-			if (nScreenX + x >= MAP_SCREEN_X)
+			if (gridX + x >= MAP_SCREEN_X)
 			{
 				continue;
-			}if (nScreenY + y < 0)
-			{
-				continue;
-			}
-			if (nScreenY + y >= MAP_SCREEN_Y)
+			}if (gridY + y < 0)
 			{
 				continue;
 			}
-			vec.push_back((nScreenY + y)*MAP_SCREEN_X +nScreenX + x);
+			if (gridY + y >= MAP_SCREEN_Y)
+			{
+				continue;
+			}
+			vec.push_back((gridY + y)*MAP_SCREEN_X +gridX + x);
 		}
 	}
 	return vec;
@@ -214,32 +226,6 @@ uint32_t PlayerMgr::Check(Player &player)
 		{
 			continue;
 		}
-		
-		//{//for test
-		//	if (aoi_set.find(entity) == aoi_set.end())//when error
-		//	{
-		//		UNIT_INFO("player id=%d, gridIdx=%d x,y=%d %d", player.m_id, player.m_entity.GridIdx(), player.m_x, player.m_y);
-		//		uint16_t x, y;
-		//		Check::Ins().GetGridXY(player.m_entity.GridIdx(), x, y);
-		//		UNIT_INFO("gridXY = %d %d", x, y);
-		//		//UNIT_INFO("aoi_set size, g_set size=%d %d", aoi_set.size(), g_set.size());
-
-		//		SceneEntity *sceneEntity = dynamic_cast<SceneEntity *>(entity);
-		//		//UNIT_INFO("g_set entity scene = %p", sceneEntity->GetScene());
-		//		UNIT_INFO("g_set entity id=%d, gridIdx=%d x,y=%d %d", sceneEntity->m_owner.m_id, entity->GridIdx(), sceneEntity->m_owner.m_x, sceneEntity->m_owner.m_y);
-		//		Check::Ins().GetGridXY(entity->GridIdx(), x, y);
-		//		UNIT_INFO("gridXY = %d %d", x, y);
-		//		//UNIT_INFO("g_set player  = %p", &sceneEntity->m_owner);
-		//	}	
-		//	for (aoi::Entity *entity : aoi_set)
-		//	{
-		//		SceneEntity *sceneEntity = dynamic_cast<SceneEntity *>(entity);
-		//		UNIT_INFO("aoi entity id=%d, gridIdx=%d x,y=%d %d", sceneEntity->m_owner.m_id, entity->GridIdx(), sceneEntity->m_owner.m_x, sceneEntity->m_owner.m_y);
-		//		uint16_t x, y;
-		//		Check::Ins().GetGridXY(entity->GridIdx(), x, y);
-		//		UNIT_INFO("gridXY = %d %d", x, y);
-		//	}
-		//}
 		UNIT_ASSERT(aoi_set.find(entity) != aoi_set.end());
 		cnt++;
 	}

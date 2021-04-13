@@ -236,25 +236,96 @@ UNITTEST(test_limit_xy)
 
 #endif
 
-//测试 随意移动， 9格子可视 关系正确
+//测试 一些坐标转换位置
+UNITTEST(pos_cal)
+{
+	uint16_t x = 371, y = 2014;
+	uint16_t centerGridX, centerGridY;
+	uint16_t gridX, gridY;
+	Check::Ins().GetGridXY(x, y, centerGridX, centerGridY);
+	//UNIT_INFO("center %d, %d", centerGridX, centerGridY); //16, 143
+	
+
+	Check::Ins().GetGridXY(x - SCREEN_GRID_WIDTH, y - SCREEN_GRID_HEIGHT, gridX, gridY);
+	UNIT_ASSERT(gridX = centerGridX - 1);
+	UNIT_ASSERT(gridY = centerGridY - 1);
+	Check::Ins().GetGridXY(x, y - SCREEN_GRID_HEIGHT, gridX, gridY);
+	UNIT_ASSERT(gridX = centerGridX);
+	UNIT_ASSERT(gridY = centerGridY - 1);
+	Check::Ins().GetGridXY(x + SCREEN_GRID_WIDTH, y - SCREEN_GRID_HEIGHT, gridX, gridY);
+	UNIT_ASSERT(gridX = centerGridX + 1);
+	UNIT_ASSERT(gridY = centerGridY - 1);
+
+	Check::Ins().GetGridXY(x - SCREEN_GRID_WIDTH, y , gridX, gridY);
+	UNIT_ASSERT(gridX = centerGridX - 1);
+	UNIT_ASSERT(gridY = centerGridY);
+	Check::Ins().GetGridXY(x, y, gridX, gridY);
+	UNIT_ASSERT(gridX = centerGridX);
+	UNIT_ASSERT(gridY = centerGridY);
+	Check::Ins().GetGridXY(x + SCREEN_GRID_WIDTH, y, gridX, gridY);
+	UNIT_ASSERT(gridX = centerGridX + 1);
+	UNIT_ASSERT(gridY = centerGridY);
+
+	Check::Ins().GetGridXY(x - SCREEN_GRID_WIDTH, y + SCREEN_GRID_HEIGHT, gridX, gridY);
+	UNIT_ASSERT(gridX = centerGridX - 1);
+	UNIT_ASSERT(gridY = centerGridY + 1);
+	Check::Ins().GetGridXY(x, y + SCREEN_GRID_HEIGHT, gridX, gridY);
+	UNIT_ASSERT(gridX = centerGridX);
+	UNIT_ASSERT(gridY = centerGridY + 1);
+	Check::Ins().GetGridXY(x + SCREEN_GRID_WIDTH, y + SCREEN_GRID_HEIGHT, gridX, gridY);
+	UNIT_ASSERT(gridX = centerGridX + 1);
+	UNIT_ASSERT(gridY = centerGridY + 1);
+}
+
+//测试 进入，更新位置
+UNITTEST(enter_update)
+{
+	GameScene *scene = new GameScene();
+	PlayerMgr *mgr = new PlayerMgr();
+
+	uint16_t x= 371, y= 2014;//gridxy = 16, 143
+	uint16_t gridX, gridY;
+	Check::Ins().GetGridXY(371, 2014, gridX, gridY);
+
+	mgr->m_id2Player.insert(make_pair(1, Player(1)));
+	mgr->m_id2Player.insert(make_pair(2, Player(2)));
+
+	mgr->GetPlayer(1)->Enter(*scene, x, y);
+	mgr->GetPlayer(2)->Enter(*scene, x+ SCREEN_GRID_WIDTH, y);
+
+	mgr->Check();
+
+	mgr->GetPlayer(2)->UpdateXY(x + SCREEN_GRID_WIDTH, y+ SCREEN_GRID_HEIGHT);
+
+	mgr->Check();
+
+	mgr->GetPlayer(2)->UpdateXY(x + SCREEN_GRID_WIDTH*3, y + SCREEN_GRID_HEIGHT);
+
+
+}
+
+//测试 随机进入场景， 9格子可视 关系正确
 UNITTEST(rand_update_pos)
 {
 	GameScene *scene = new GameScene();
 	PlayerMgr *mgr = new PlayerMgr();
-	//UNIT_INFO("GameScene %p", scene);
-	const int32_t MAX_NUM = 50;
+	const int32_t MAX_NUM = 1000;
 	for (int i = 0; i < MAX_NUM; i++)
 	{
 		mgr->m_id2Player.insert(make_pair(i, Player(i)));
 	}
-	for (int i = 0; i < MAX_NUM - 2; i++)
+	for (int i = 0; i < MAX_NUM - 100; i++)
 	{
 		mgr->GetPlayer(i)->Enter(*scene, Check::Ins().RandX(), Check::Ins().RandY());
 	}
 
-	//UNIT_INFO("49 scene %p %p", mgr->GetPlayer(49)->m_gameScene, mgr->GetPlayer(49)->m_entity.GetScene());
-
 	mgr->Check();
+	for (int i = 0; i < MAX_NUM - 100; i++)
+	{
+		mgr->GetPlayer(i)->UpdateXY(Check::Ins().RandX(), Check::Ins().RandY());
+	}
+	mgr->Check();
+
 	for (int i = 0; i < MAX_NUM; i++)
 	{
 		mgr->GetPlayer(i)->Leave(*scene);
