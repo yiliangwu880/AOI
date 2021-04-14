@@ -1,4 +1,5 @@
 /*
+来源：https://github.com/yiliangwu880/AOI.git
   9格子算法的 AOI(area of interest)。 
   管理 场景 实体 视野可见
 使用方法：
