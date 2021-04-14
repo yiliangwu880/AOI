@@ -7,3 +7,5 @@
 /vs/*
 .vs
 /src/test/version.h
+/src/aoi/del_sync_tmp_file.bat
+/src/aoi/run.py

@@ -50,8 +50,8 @@ struct SceneEntity : public aoi::Entity
 	SceneEntity(Player &player);
 	std::set<Entity *> m_observers;
 
-	virtual void OnAddObserver(Entity &entity); //entity 看见我
-	virtual void OnDelObserver(Entity &entity); //entity 看不见我
+	virtual void OnAddObserver(Entity &other); //entity 看见我
+	virtual void OnDelObserver(Entity &other); //entity 看不见我
 };
 
 struct Player 

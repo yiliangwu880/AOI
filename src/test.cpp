@@ -136,7 +136,7 @@ UNITTEST(test_free)
 
 	mgr->GetPlayer(2)->Leave();
 
-	UNIT_ASSERT(3 == scene->m_aoiScene.GetEntityNum());
+	UNIT_ASSERT(3 == AoiTest::GetEntityNum(scene->m_aoiScene));
 
 	UNIT_ASSERT(1 == mgr->Check(0));
 	UNIT_ASSERT(1 == mgr->Check(1));
@@ -145,12 +145,13 @@ UNITTEST(test_free)
 
 	mgr->GetPlayer(0)->Leave();
 	{
-		auto p = mgr->GetPlayer(1)->m_entity.GetScene();
+		
+		auto p = AoiTest::GetEntityScene(mgr->GetPlayer(1)->m_entity);
 		UNIT_ASSERT(p);
 	}
 	delete scene;
 	{
-		auto p = mgr->GetPlayer(1)->m_entity.GetScene();
+		auto p = AoiTest::GetEntityScene(mgr->GetPlayer(1)->m_entity);
 		UNIT_ASSERT(!p);
 	}
 
@@ -189,13 +190,13 @@ UNITTEST(test_free2)
 		UNIT_ASSERT(0 == mgr->Check(i));
 	}
 
-	UNIT_ASSERT(2 == scene->m_aoiScene.GetEntityNum());
+	UNIT_ASSERT(2 == AoiTest::GetEntityNum(scene->m_aoiScene));
 	for (int i = 0; i < 10; i++)
 	{
 		mgr->GetPlayer(i)->Leave();
 	}
 	delete mgr;
-	UNIT_ASSERT(0 == scene->m_aoiScene.GetEntityNum());
+	UNIT_ASSERT(0 == AoiTest::GetEntityNum(scene->m_aoiScene));
 
 	delete scene;
 }

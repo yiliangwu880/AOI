@@ -9,7 +9,8 @@ aoi::Entity::~Entity()
 {
 	if (nullptr != m_scene)
 	{
-		L_ERROR("can't del entity when not leave scene"); //还没离开 场景，不允许删除对象。 因为析构函数不能调用 虚函数 OnDelObserver，所以需要用户先离开场景
+		L_ERROR("can't del entity when not leave scene"); //还没离开 场景，不允许删除对象。 
+		//m_scene->EntityLeave(*this);//不能调用看离开场景。 因为析构函数不能调用 虚函数 OnDelObserver，所以需要用户先离开场景
 	}
 }
 
@@ -39,23 +40,20 @@ bool aoi::Entity::Leave()
 	return m_scene->EntityLeave(*this);
 }
 
-void aoi::Entity::AddObserver(Entity &entity)
+void aoi::Entity::AddObserver(Entity &other)
 {
-	m_observers.insert(&entity);
-	OnAddObserver(entity);
+	L_ASSERT(!m_isFreeze);
+	m_observers.insert(&other);
+	OnAddObserver(other);
 }
 
-void aoi::Entity::DelObserver(Entity &entity)
+void aoi::Entity::DelObserver(Entity &other)
 {
-	m_observers.erase(&entity);
-	OnDelObserver(entity);
+	L_ASSERT(!m_isFreeze);
+	m_observers.erase(&other);
+	OnDelObserver(other);
 }
 
-void aoi::Entity::OnSceneDel()
-{
-	m_scene = nullptr;
-	m_observers.clear();
-}
 
 void aoi::Entity::UpdatePos(uint16_t x, uint16_t y)
 {
@@ -84,22 +82,26 @@ void aoi::Entity::ForEachObservers(std::function<void(Entity&)> f)
 	{
 		return;
 	}
-	m_scene->Freeze(true);
+	m_scene->Freeze(true);//不让scene改变状态，因为scene 改变会又机会改变 entity 状态
+	m_isFreeze = true;
 	for (Entity *p : m_observers)
 	{
 		f(*p);//天知道里面做什么！所以冻结住才安全
 	}
+	m_isFreeze = false;
 	m_scene->Freeze(false);
 }
 
 aoi::Scene::~Scene()
 {
+	VecEntity vec;
 	for (auto &v : m_idx2VecEntity)
 	{
-		for (Entity *entity : v.second)
-		{
-			entity->OnSceneDel();
-		}
+		vec.insert(vec.end(), v.second.begin(), v.second.end());
+	}
+	for (Entity *entity : vec)
+	{
+		EntityLeave(*entity);
 	}
 }
 
@@ -160,7 +162,7 @@ bool aoi::Scene::EntityLeave(Entity &entity)
 			entity.DelObserver(*otherEntity);
 		}
 	}
-
+	L_ASSERT(entity.m_observers.empty());
 	m_isFreeze = false;
 	return true;
 }

@@ -2,10 +2,9 @@
   9格子算法的 AOI(area of interest)。 
   管理 场景 实体 视野可见
 使用方法：
-   1）一切扩展接口都在Entity的公共函数 和虚函数中
-   2）需要修改GridIdxMgr.h的最大地图长宽，grid长宽来匹配你的项目。
-   3) 只需要include aoi.h
-   4) 屏蔽 AOI_TEST 宏
+   ) 复制 src/aoi目录的代码到你的项目
+   ）一切扩展接口都在Entity的公共函数 和虚函数中
+   ）需要修改GridIdxMgr.h的最大地图长宽，grid长宽来匹配你的项目。
 
 特点：已经保证不引用野对象。
 	保证方法：析构函数互相解引用，
@@ -32,7 +31,6 @@
 */
 #pragma once
 #include <set>
-#define AOI_TEST 1
 
 
 namespace aoi
@@ -43,11 +41,13 @@ namespace aoi
 	class Entity
 	{
 		friend class Scene;
-
+		friend class AoiTest;
 
 		Scene * m_scene = nullptr;
 		std::set<Entity *> m_observers; //看见我的entity 集合
 		uint16_t m_gridIdx = 0;			//当前所在格子索引
+		bool m_isFreeze = false;		//true 表示禁止m_observers变化。 防止野entity或者遍历过程修改容器
+
 	public:
 		~Entity();
 		bool Enter(Scene &scene, uint16_t x, uint16_t y);
@@ -56,36 +56,32 @@ namespace aoi
 		void ForEachObservers(std::function<void(Entity&)> f);//遍历 看见我的entity集合
 
 	private:
-		virtual void OnAddObserver(Entity &entity) = 0; //entity 看见我
-		virtual void OnDelObserver(Entity &entity) = 0; //entity 看不见我
+		virtual void OnAddObserver(Entity &other) = 0; //other 看见我
+		virtual void OnDelObserver(Entity &other) = 0; //other 看不见我
 
-#if AOI_TEST
-	public:
-#else
 	private:
-#endif
 		void SetScene(Scene *scene) { m_scene = scene; }
-		void AddObserver(Entity &entity);//entity看见我
-		void DelObserver(Entity &entity);//entity看不见我
+		void AddObserver(Entity &other);//entity看见我
+		void DelObserver(Entity &other);//entity看不见我
 		uint16_t GridIdx() const { return m_gridIdx; }
-		void OnSceneDel();
 		Scene *GetScene() const { return m_scene; }
 	};
 
 	class Scene
 	{
 		friend class Entity;
-
+		friend class AoiTest;
 		using VecEntity = std::vector<Entity *>;
-		//map 类型，不用设计地图大小，自动调整需要的内存。 如果数组类型，需要设置地图大小，效率更高
+
+		//map 类型，不用设置地图大小，自动调整需要的内存。 如果数组类型，需要设置地图大小，效率更高
 		std::map<uint16_t, VecEntity> m_idx2VecEntity;//gridIdx 2 entity. 表示一个grid的所有entity
-		bool m_isFreeze = false; //true 表示禁止entity gridIdx变化。 防止野entity或者迭代过程修改容器
+		bool m_isFreeze = false; //true 表示禁止entity gridIdx变化。 防止野entity或者遍历过程修改容器
 
 	public:
-		~Scene(); //如果删除场景 还有entity,只做entity状态清理，不回调任何函数
-		size_t GetEntityNum(); //for test use
+		~Scene(); 
 
 	private:
+		size_t GetEntityNum(); //for test use
 		bool EntityEnter(Entity &entity);
 		bool EntityLeave(Entity &entity);
 		bool UpdateEntity(Entity &entity, uint16_t oldGridIdx, uint16_t newGridIdx); //entity gridIdx 发生变化
@@ -94,4 +90,17 @@ namespace aoi
 		void Freeze(bool val) { m_isFreeze = val; }
 	};
 
+	//测试项目用
+	class AoiTest
+	{
+	public:
+		static Scene *GetEntityScene(Entity &entity)
+		{
+			return entity.m_scene;
+		}
+		static size_t GetEntityNum(Scene &scene) 
+		{
+			return scene.GetEntityNum();
+		}
+	};
 }

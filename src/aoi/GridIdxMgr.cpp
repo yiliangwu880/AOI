@@ -1,4 +1,3 @@
-
 #include "GridIdxMgr.h"
 #include "stdlib.h"
 #include "log_def.h"

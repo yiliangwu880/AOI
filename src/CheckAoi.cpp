@@ -140,14 +140,14 @@ SceneEntity::SceneEntity(Player &player)
 
 }
 
-void SceneEntity::OnAddObserver(Entity &entity)
+void SceneEntity::OnAddObserver(Entity &other)
 {
-	m_observers.insert(&entity);
+	m_observers.insert(&other);
 }
 
-void SceneEntity::OnDelObserver(Entity &entity)
+void SceneEntity::OnDelObserver(Entity &other)
 {
-	m_observers.erase(&entity);
+	m_observers.erase(&other);
 }
 
 Player::Player()
@@ -244,7 +244,7 @@ uint32_t PlayerMgr::Check(Player &player)
 		{
 			continue;
 		}
-
+#if 0
 		{//for test
 			if (aoi_set.find(g_entity) == aoi_set.end())//when error
 			{
@@ -271,6 +271,7 @@ uint32_t PlayerMgr::Check(Player &player)
 				}
 			}	
 		}
+#endif
 		UNIT_ASSERT(aoi_set.find(g_entity) != aoi_set.end());
 		cnt++;
 	}
@@ -294,7 +295,8 @@ std::vector<aoi::Entity *> PlayerMgr::GetGridEntity(GameScene &gameScene, uint16
 	for (auto &v : m_id2Player)
 	{
 		Player &player = v.second;
-		if (player.m_entity.GetScene()!= nullptr && player.m_entity.GetScene() == &(gameScene.m_aoiScene))
+		Scene *pScene = AoiTest::GetEntityScene(player.m_entity);
+		if (pScene != nullptr && pScene == &(gameScene.m_aoiScene))
 		{
 			uint16_t i = Check::Ins().GetGridIdx(player.m_x, player.m_y);
 			if (i == idx)
