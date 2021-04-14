@@ -51,7 +51,7 @@ namespace aoi
 	public:
 		~Entity();
 		bool Enter(Scene &scene, uint16_t x, uint16_t y);
-		bool Leave(Scene &scene);
+		bool Leave();
 		void UpdatePos(uint16_t x, uint16_t y); //更新 x,y坐标。 单位为 point
 		void ForEachObservers(std::function<void(Entity&)> f);//遍历 看见我的entity集合
 

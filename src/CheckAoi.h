@@ -37,6 +37,9 @@ public:
 	uint16_t RandPos();
 	uint16_t RandX() { return RandPos() % aoi::MAP_MAX_POS_X; };
 	uint16_t RandY() { return RandPos() % aoi::MAP_MAX_POS_Y; };
+	//返回 闭区间[min,max]内随机一个数
+	static uint32_t RandUint32(uint32_t min, uint32_t max);
+	static uint32_t rand32();
 };
 
 struct Player;
@@ -63,7 +66,7 @@ struct Player
 	Player(uint32_t id);
 	Player(const Player &other);
 	bool Enter(GameScene &scene, uint16_t x, uint16_t y);
-	bool Leave(GameScene &scene);
+	bool Leave();
 	void UpdateXY(uint16_t x, uint16_t y);
 
 };

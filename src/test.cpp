@@ -101,14 +101,14 @@ UNITTEST(observer)
 		player.Enter(*scene, 0, 0);
 	}
 	UNIT_ASSERT(199 == mgr->Check(0));
-	mgr->GetPlayer(0)->Leave(*scene);
+	mgr->GetPlayer(0)->Leave();
 	UNIT_ASSERT(0 == mgr->Check(0));
 	UNIT_ASSERT(198 == mgr->Check(1));
 
 	for (auto &v : mgr->m_id2Player)
 	{
 		Player &player = v.second;
-		player.Leave(*scene);
+		player.Leave();
 	}
 	for (int i = 0; i < 200; i++)
 	{
@@ -134,7 +134,7 @@ UNITTEST(test_free)
 	mgr->GetPlayer(2)->Enter(*scene, 0, 0);
 	mgr->GetPlayer(3)->Enter(*scene, 303, 44);
 
-	mgr->GetPlayer(2)->Leave(*scene);
+	mgr->GetPlayer(2)->Leave();
 
 	UNIT_ASSERT(3 == scene->m_aoiScene.GetEntityNum());
 
@@ -143,7 +143,7 @@ UNITTEST(test_free)
 	UNIT_ASSERT(0 == mgr->Check(2));
 	UNIT_ASSERT(0 == mgr->Check(3));
 
-	mgr->GetPlayer(0)->Leave(*scene);
+	mgr->GetPlayer(0)->Leave();
 	{
 		auto p = mgr->GetPlayer(1)->m_entity.GetScene();
 		UNIT_ASSERT(p);
@@ -176,14 +176,14 @@ UNITTEST(test_free2)
 	//mgr->GetPlayer(3)->Enter(*scene, 8803, 4884);
 	mgr->GetPlayer(3)->Enter(*scene, 803, 884);
 
-	mgr->GetPlayer(2)->Leave(*scene);
+	mgr->GetPlayer(2)->Leave();
 
 	UNIT_ASSERT(1 == mgr->Check(0));
 	UNIT_ASSERT(1 == mgr->Check(1));
 	UNIT_ASSERT(0 == mgr->Check(2));
 	UNIT_ASSERT(0 == mgr->Check(3));
 
-	mgr->GetPlayer(0)->Leave(*scene);
+	mgr->GetPlayer(0)->Leave();
 	for (int i = 0; i < 10; i++)
 	{
 		UNIT_ASSERT(0 == mgr->Check(i));
@@ -192,7 +192,7 @@ UNITTEST(test_free2)
 	UNIT_ASSERT(2 == scene->m_aoiScene.GetEntityNum());
 	for (int i = 0; i < 10; i++)
 	{
-		mgr->GetPlayer(i)->Leave(*scene);
+		mgr->GetPlayer(i)->Leave();
 	}
 	delete mgr;
 	UNIT_ASSERT(0 == scene->m_aoiScene.GetEntityNum());
@@ -219,15 +219,15 @@ UNITTEST(test_limit_xy)
 	UNIT_ASSERT(1 == mgr->Check(2));
 	UNIT_ASSERT(1 == mgr->Check(3));
 
-	mgr->GetPlayer(1)->Leave(*scene);
-	mgr->GetPlayer(3)->Leave(*scene);
+	mgr->GetPlayer(1)->Leave();
+	mgr->GetPlayer(3)->Leave();
 
 	UNIT_ASSERT(0 == mgr->Check(0));
 	UNIT_ASSERT(0 == mgr->Check(2));
 
 	for (int i = 0; i < 10; i++)
 	{
-		mgr->GetPlayer(i)->Leave(*scene);
+		mgr->GetPlayer(i)->Leave();
 	}
 	delete mgr;
 	delete scene;
@@ -278,6 +278,7 @@ UNITTEST(pos_cal)
 UNITTEST(enter_update)
 {
 	GameScene *scene = new GameScene();
+	GameScene *scene2 = new GameScene();
 	PlayerMgr *mgr = new PlayerMgr();
 
 	uint16_t x= 371, y= 2014;//gridxy = 16, 143
@@ -291,10 +292,10 @@ UNITTEST(enter_update)
 	mgr->GetPlayer(1)->Enter(*scene, x, y);
 	mgr->GetPlayer(2)->Enter(*scene, x + SCREEN_GRID_WIDTH, y);
 	mgr->GetPlayer(3)->Enter(*scene, x + SCREEN_GRID_WIDTH*3, y);
-
 	UNIT_ASSERT(mgr->Check(1) == 1);
 	UNIT_ASSERT(mgr->Check(2) == 1);
 	UNIT_ASSERT(mgr->Check(3) == 0);
+	mgr->Check();
 
 	mgr->GetPlayer(1)->UpdateXY(x, y);
 	mgr->GetPlayer(2)->UpdateXY(x, y);
@@ -302,6 +303,7 @@ UNITTEST(enter_update)
 	UNIT_ASSERT(mgr->Check(1) == 2);
 	UNIT_ASSERT(mgr->Check(2) == 2);
 	UNIT_ASSERT(mgr->Check(3) == 2);
+	mgr->Check();
 
 	//站位 ：对角线排列 
 	mgr->GetPlayer(1)->UpdateXY(x + SCREEN_GRID_WIDTH, y+ SCREEN_GRID_HEIGHT);
@@ -310,7 +312,81 @@ UNITTEST(enter_update)
 	UNIT_ASSERT(mgr->Check(1) == 1);
 	UNIT_ASSERT(mgr->Check(2) == 2);
 	UNIT_ASSERT(mgr->Check(3) == 1);
+	mgr->Check();
 
+	mgr->GetPlayer(2)->UpdateXY(x - SCREEN_GRID_WIDTH*2, y - SCREEN_GRID_HEIGHT*2);
+	UNIT_ASSERT(mgr->Check(1) == 0);
+	UNIT_ASSERT(mgr->Check(2) == 1);
+	UNIT_ASSERT(mgr->Check(3) == 1);
+	mgr->Check();
+
+	mgr->GetPlayer(2)->UpdateXY(x - SCREEN_GRID_WIDTH * 3, y - SCREEN_GRID_HEIGHT * 3);
+	UNIT_ASSERT(mgr->Check(1) == 0);
+	UNIT_ASSERT(mgr->Check(2) == 0);
+	UNIT_ASSERT(mgr->Check(3) == 0);
+	mgr->Check();
+
+	//站位 ：对角线排列 
+	mgr->GetPlayer(1)->UpdateXY(x + SCREEN_GRID_WIDTH, y + SCREEN_GRID_HEIGHT);
+	mgr->GetPlayer(2)->UpdateXY(x, y);
+	mgr->GetPlayer(3)->UpdateXY(x - SCREEN_GRID_WIDTH, y - SCREEN_GRID_HEIGHT);
+	UNIT_ASSERT(mgr->Check(1) == 1);
+	UNIT_ASSERT(mgr->Check(2) == 2);
+	UNIT_ASSERT(mgr->Check(3) == 1);
+	mgr->Check();
+	{
+		auto f = [&](Entity& other)
+		{
+			UNIT_ASSERT(&other == &(mgr->GetPlayer(2)->m_entity));
+		};
+		mgr->GetPlayer(1)->m_entity.ForEachObservers(f);
+	}
+	{
+		auto f = [&](Entity& other)
+		{
+			UNIT_ASSERT(&other == &(mgr->GetPlayer(1)->m_entity) || &other == &(mgr->GetPlayer(3)->m_entity));
+		};
+		mgr->GetPlayer(2)->m_entity.ForEachObservers(f);
+	}
+	{
+		auto f = [&](Entity& other)
+		{
+			UNIT_ASSERT(&other == &(mgr->GetPlayer(2)->m_entity));
+		};
+		mgr->GetPlayer(3)->m_entity.ForEachObservers(f);
+	}
+
+	//leave
+	mgr->GetPlayer(1)->Enter(*scene2, 0, 0);
+	UNIT_ASSERT(mgr->Check(1) == 0);
+	UNIT_ASSERT(mgr->Check(2) == 1);
+	UNIT_ASSERT(mgr->Check(3) == 1);
+	mgr->Check();
+
+	mgr->GetPlayer(1)->Enter(*scene, x + SCREEN_GRID_WIDTH, y + SCREEN_GRID_HEIGHT);
+	UNIT_ASSERT(mgr->Check(1) == 1);
+	UNIT_ASSERT(mgr->Check(2) == 2);
+	UNIT_ASSERT(mgr->Check(3) == 1);
+	mgr->Check();
+
+	mgr->GetPlayer(1)->Enter(*scene, x + SCREEN_GRID_WIDTH, y + SCREEN_GRID_HEIGHT);
+	mgr->GetPlayer(2)->Enter(*scene, x, y);
+	mgr->GetPlayer(3)->Enter(*scene, x - SCREEN_GRID_WIDTH, y - SCREEN_GRID_HEIGHT);
+	UNIT_ASSERT(mgr->Check(1) == 1);
+	UNIT_ASSERT(mgr->Check(2) == 2);
+	UNIT_ASSERT(mgr->Check(3) == 1);
+	mgr->Check();
+
+	mgr->GetPlayer(1)->Leave();	
+	UNIT_ASSERT(mgr->Check(1) == 0);
+	UNIT_ASSERT(mgr->Check(2) == 1);
+	UNIT_ASSERT(mgr->Check(3) == 1);
+	mgr->Check();
+
+	mgr->GetPlayer(2)->Leave();
+	UNIT_ASSERT(mgr->Check(1) == 0);
+	UNIT_ASSERT(mgr->Check(2) == 0);
+	UNIT_ASSERT(mgr->Check(3) == 0);
 	mgr->Check();
 }
 
@@ -337,10 +413,11 @@ UNITTEST(test_update)
 	mgr->Check();
 }
 
-//测试 随机进入场景， 9格子可视 关系正确
+//测试 随机进入场景， 随机移动
 UNITTEST(rand_update_pos)
 {
 	GameScene *scene = new GameScene();
+	GameScene *scene2 = new GameScene();
 	PlayerMgr *mgr = new PlayerMgr();
 	const int32_t MAX_NUM = 1000;
 	for (int i = 0; i < MAX_NUM; i++)
@@ -351,30 +428,45 @@ UNITTEST(rand_update_pos)
 	{
 		mgr->GetPlayer(i)->Enter(*scene, Check::Ins().RandX(), Check::Ins().RandY());
 	}
-
 	mgr->Check();
-	for (int i = 0; i < MAX_NUM - 100; i++)
+	for (int i = 0; i < 10000*10; i++)
 	{
-		mgr->GetPlayer(i)->UpdateXY(Check::Ins().RandX(), Check::Ins().RandY());
+		int idx = Check::Ins().RandUint32(0, MAX_NUM - 100 - 1);
+		int action = Check::Ins().RandUint32(0, 10);
+		int sceneIdx = Check::Ins().RandUint32(0, 1);
+		GameScene *pscene;
+		if (0 == sceneIdx)
+		{
+			pscene = scene;
+		}
+		else
+		{
+			pscene = scene2;
+		}
+		if (0 == action)
+		{
+			mgr->GetPlayer(idx)->Enter(*pscene, Check::Ins().RandX(), Check::Ins().RandY());
+		}
+		else if (1 == action)
+		{
+			mgr->GetPlayer(idx)->Leave();
+		}
+		else
+		{
+			mgr->GetPlayer(idx)->UpdateXY(Check::Ins().RandX(), Check::Ins().RandY());
+		}
+		if (0 == i%1000)
+		{
+			mgr->Check();
+		}
 	}
 	mgr->Check();
 
 	for (int i = 0; i < MAX_NUM; i++)
 	{
-		mgr->GetPlayer(i)->Leave(*scene);
+		mgr->GetPlayer(i)->Leave();
 	}
 	delete mgr;
 	delete scene;
 }
 
-//UNITTEST(rand_update_pos)
-//{
-//	Player p1(1);
-//	Player p2(p1);
-//	UNIT_INFO("%p %p", &p1, &p2);
-//	UNIT_INFO("%p %p", &p1.m_entity.m_owner, &p2.m_entity.m_owner);
-//
-//}
-//测试 移动到附近格子， 9格子可视 增删正确。
-
-//测试 进入，离开scene.状态正确

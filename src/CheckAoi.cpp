@@ -115,6 +115,24 @@ uint16_t Check::RandPos()
 	uint32_t r =  (::rand() << 17) | (::rand() << 2) | (::rand());
 	return (uint16_t)r;
 }
+//返回 闭区间[min,max]内随机一个数
+uint32_t Check::RandUint32(uint32_t min, uint32_t max)
+{
+	if (min == max)
+		return min;
+	else if (min > max) {
+		return max + rand32() % (min - max + 1);
+	}
+	else {
+		return min + rand32() % (max - min + 1);
+	}
+}
+
+uint32_t Check::rand32()
+{
+	//确保 RAND_MAX == 0x7fff 才有效
+	return (::rand() << 17) | (::rand() << 2) | (::rand());
+}
 
 SceneEntity::SceneEntity(Player &player)
 	:m_owner(player)
@@ -161,10 +179,10 @@ bool Player::Enter(GameScene &scene, uint16_t x, uint16_t y)
 	return m_entity.Enter(scene.m_aoiScene, x, y);
 }
 
-bool Player::Leave(GameScene &scene)
+bool Player::Leave()
 {
 	m_gameScene = nullptr;
-	return m_entity.Leave(scene.m_aoiScene);
+	return m_entity.Leave();
 }
 
 void Player::UpdateXY(uint16_t x, uint16_t y)

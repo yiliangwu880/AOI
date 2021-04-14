@@ -30,9 +30,13 @@ bool aoi::Entity::Enter(Scene &scene, uint16_t x, uint16_t y)
 	return scene.EntityEnter(*this);
 }
 
-bool aoi::Entity::Leave(Scene &scene)
+bool aoi::Entity::Leave()
 {
-	return scene.EntityLeave(*this);
+	if (!m_scene)
+	{
+		return false;
+	}
+	return m_scene->EntityLeave(*this);
 }
 
 void aoi::Entity::AddObserver(Entity &entity)
