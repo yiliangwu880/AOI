@@ -15,9 +15,9 @@ namespace aoi
 	//索引从0开始
 	//MAP_SCREEN_MAX 表示 grid 索引的最大值 + 1 
 	//比如 MAP_SCREEN_X MAP_SCREEN_Y MAP_SCREEN_MAX == 10 10 100
-	static const uint16_t MAP_SCREEN_X = (MAP_MAX_POS_X + SCREEN_GRID_WIDTH - 1) / SCREEN_GRID_WIDTH;  
-	static const uint16_t MAP_SCREEN_Y = (MAP_MAX_POS_Y + SCREEN_GRID_HEIGHT - 1) / SCREEN_GRID_HEIGHT;
-	static const uint32_t MAP_SCREEN_MAX = MAP_SCREEN_X * MAP_SCREEN_Y  ;//map 的最大grid数  
+	constexpr uint16_t MAP_SCREEN_X = (MAP_MAX_POS_X + SCREEN_GRID_WIDTH - 1) / SCREEN_GRID_WIDTH;  
+	constexpr uint16_t MAP_SCREEN_Y = (MAP_MAX_POS_Y + SCREEN_GRID_HEIGHT - 1) / SCREEN_GRID_HEIGHT;
+	constexpr uint32_t MAP_SCREEN_MAX = MAP_SCREEN_X * MAP_SCREEN_Y  ;//map 的最大grid数  
 
 	typedef std::vector<uint16_t> VecGridIdx;
 	enum DirType
