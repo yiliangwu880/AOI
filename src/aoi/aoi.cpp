@@ -117,7 +117,7 @@ size_t aoi::Scene::GetEntityNum()
 
 bool aoi::Scene::EntityEnter(Entity &entity)
 {
-	L_COND(!m_isFreeze, false);
+	L_COND(!m_isFreeze, false);//迭代m_observers 期间禁止调用， 用户设法延时调用吧。
 	m_isFreeze = true;
 	uint16_t gridIdx = entity.GridIdx();
 
@@ -139,7 +139,7 @@ bool aoi::Scene::EntityEnter(Entity &entity)
 
 bool aoi::Scene::EntityLeave(Entity &entity)
 {
-	L_COND(!m_isFreeze, false);
+	L_COND(!m_isFreeze, false); //迭代m_observers 期间禁止调用， 用户设法延时调用吧。
 	if (!entity.GetScene())
 	{
 		return false;
@@ -170,7 +170,7 @@ bool aoi::Scene::EntityLeave(Entity &entity)
 bool aoi::Scene::UpdateEntity(Entity &entity, uint16_t oldGridIdx, uint16_t newGridIdx)
 {
 	L_ASSERT(oldGridIdx != newGridIdx);
-	L_COND(!m_isFreeze, false);
+	L_COND(!m_isFreeze, false);//迭代m_observers 期间禁止调用， 用户设法延时调用吧。
 	L_COND(entity.GetScene(), false);
 	m_isFreeze = true;
 	if (GridIdxMgr::Ins().checkTwoPosIInNine(oldGridIdx, newGridIdx))
