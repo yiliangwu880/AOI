@@ -40,11 +40,37 @@ bool aoi::Entity::Leave()
 	return m_scene->EntityLeave(*this);
 }
 
+void aoi::Entity::OnAddObserver(const std::vector<Entity*>& vecOther)
+{
+	for (auto& i : vecOther)
+	{
+		OnAddObserver(*i);
+	}
+}
+
+void aoi::Entity::OnDelObserver(const std::vector<Entity*>& vecOther)
+{
+	for (auto& i : vecOther)
+	{
+		OnDelObserver(*i);
+	}
+}
+
 void aoi::Entity::AddObserver(Entity &other)
 {
 	L_ASSERT(!m_isFreeze);
 	m_observers.insert(&other);
 	OnAddObserver(other);
+}
+
+void aoi::Entity::AddObserver(const std::vector<Entity*>& vecOther)
+{
+	L_ASSERT(!m_isFreeze);
+	for (auto& i : vecOther)
+	{
+		m_observers.insert(i);
+	}
+	OnAddObserver(vecOther);
 }
 
 void aoi::Entity::DelObserver(Entity &other)
@@ -54,6 +80,16 @@ void aoi::Entity::DelObserver(Entity &other)
 	OnDelObserver(other);
 }
 
+
+void aoi::Entity::DelObserver(const std::vector<Entity*>& vecOther)
+{
+	L_ASSERT(!m_isFreeze);
+	for (auto& i : vecOther)
+	{
+		m_observers.erase(i);
+	}
+	OnDelObserver(vecOther);
+}
 
 void aoi::Entity::UpdatePos(uint16_t x, uint16_t y)
 {
@@ -128,8 +164,8 @@ bool aoi::Scene::EntityEnter(Entity &entity)
 		{
 			L_ASSERT(otherEntity != &entity);
 			otherEntity->AddObserver(entity);
-			entity.AddObserver(*otherEntity);
 		}
+		entity.AddObserver(m_idx2VecEntity[v]);
 	}
 	m_idx2VecEntity[gridIdx].push_back(&entity);
 	entity.SetScene(this);
@@ -159,8 +195,8 @@ bool aoi::Scene::EntityLeave(Entity &entity)
 		{
 			L_ASSERT(otherEntity != &entity);
 			otherEntity->DelObserver(entity);
-			entity.DelObserver(*otherEntity);
 		}
+		entity.DelObserver(m_idx2VecEntity[v]);
 	}
 	L_ASSERT(entity.m_observers.empty());
 	m_isFreeze = false;

@@ -60,12 +60,16 @@ namespace aoi
 
 	private:
 		virtual void OnAddObserver(Entity &other) = 0; //other 看见我
-		virtual void OnDelObserver(Entity &other) = 0; //other 看不见我
+		virtual void OnAddObserver(const std::vector<Entity*>& vecOther); //vecOther 看见我. 目的一次调用处理，提高效率
+		virtual void OnDelObserver(Entity& other) = 0; //other 看不见我
+		virtual void OnDelObserver(const std::vector<Entity*>& vecOther); //vecOther 看不见我. 目的一次调用处理，提高效率
 
 	private:
 		void SetScene(Scene *scene) { m_scene = scene; }
 		void AddObserver(Entity &other);//entity看见我
-		void DelObserver(Entity &other);//entity看不见我
+		void AddObserver(const std::vector<Entity*>& vecOther);//entity看见我
+		void DelObserver(Entity& other);//entity看不见我
+		void DelObserver(const std::vector<Entity*>& vecOther);//entity看不见我
 		uint16_t GridIdx() const { return m_gridIdx; }
 		Scene *GetScene() const { return m_scene; }
 	};
