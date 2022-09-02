@@ -62,7 +62,7 @@ namespace aoi
 		friend class AoiTest;
 
 	public:
-		static const uint32_t MAX_SEE_PLAYER = 20;
+		static const uint32_t MAX_SEE_PLAYER = 20000;
 
 	private:
 		Scene * m_scene = nullptr;
@@ -81,18 +81,14 @@ namespace aoi
 
 	private:
 		virtual void OnAddObserver(Entity &other) = 0; //other 看见我
-		virtual void OnAddObserver(const std::vector<Entity*>& vecOther); //vecOther 看见我. 目的一次调用处理，提高效率
 		virtual void OnDelObserver(Entity& other) = 0; //other 看不见我
-		virtual void OnDelObserver(const std::vector<Entity*>& vecOther); //vecOther 看不见我. 目的一次调用处理，提高效率
 		//看见 other的优先级
 		virtual ViewPriolity GetViewPriolity(Entity& other) { return ViewPriolity::Other; };
 
 	private:
 		void SetScene(Scene *scene) { m_scene = scene; }
 		void AddObserver(Entity &other);//entity看见我
-		void AddObserver(const std::vector<Entity*>& vecOther);//entity看见我
 		void DelObserver(Entity& other);//entity看不见我
-		void DelObserver(const std::vector<Entity*>& vecOther);//entity看不见我
 		uint16_t GridIdx() const { return m_gridIdx; }
 		Scene *GetScene() const { return m_scene; }
 	};
@@ -105,7 +101,7 @@ namespace aoi
 		using VecEntityArray = VecEntity [(uint32_t)EntityType::Max];
 
 		//map 类型，不用设置地图大小，自动调整需要的内存。 如果数组类型，需要设置地图大小，效率更高
-		std::map<uint16_t, VecEntityArray> m_idx2VecEntity;//gridIdx 2 entity. 表示一个grid的所有entity
+		std::map<uint16_t, VecEntityArray> m_idx2VecEntityArray;//gridIdx 2 entity. 表示一个grid的所有entity
 		bool m_isFreeze = false; //true 表示禁止entity gridIdx变化。 防止野entity或者遍历过程修改容器
 
 	public:

@@ -1,6 +1,6 @@
 /*
 author:yiliangwu880
-you can get more refer from https://github.com/yiliangwu880/svr_util.git
+you can get more refer from https://gitee.com/yiliangwu880/svr_util.git
 brief:
 	迷你日志。
 	写库时需要打印日志，同时给使用库的用户提供改变日志实现的选择。
@@ -27,6 +27,9 @@ int main(int argc, char* argv[])
 */
 #pragma once
 #include <string>
+#include <sstream>
+#include <map>
+#include <vector>
 
 namespace aoi
 {
@@ -47,7 +50,10 @@ namespace aoi
 	{
 		int m_fd = -1;
 		std::string m_file_name;
-
+		std::string m_prefixName;
+		std::string m_suffixName;
+		int m_lastYear = 0;
+		int m_lastYday = 0;
 	public:
 		//para:const char *fname, 文件路径名
 		explicit DefaultLog(const char *fname = "svr_util_log.txt");
@@ -63,15 +69,71 @@ namespace aoi
 	{
 		PrintfCB m_cb = &DefaultPrintf;//选用函数指针，不选用 function<void(LogLv lv...)>. 因为函数对象通常引用另一个对象，另一个对象什么时候会野是个多坑问题。
 		bool m_isEnable = true;
+		std::string m_defaultFileName = "svr_util_log.txt";
 	public:
 		static LogMgr &Ins();
 		void SetLogPrinter(PrintfCB cb); //改变日志实现
+		void DefaultFileName(std::string val) { m_defaultFileName = val; }
 		void Printf(LogLv lv, const char * file, int line, const char *fun, const char * pattern, ...);
 		void Printf(LogLv lv, const char * file, int line, const char *fun, const char * pattern, va_list vp);
 		void PrintfCond(LogLv lv, const char * file, int line, const char *fun, const char * cond, const char * pattern = "", ...);
 		void Enable(bool isEnable);//false == isEnable 表示不打日志
+
+		template<class ... Args>
+		void Write(LogLv lv, const char * file, int line, const char *fun, Args && ... args)
+		{
+			if (!m_isEnable)
+			{
+				return;
+			}
+			std::stringstream s;		
+			std::initializer_list<int> { (s << std::forward<Args>(args) << " ", 0) ... }; //例如vector<int> v = { (3,1), (3,2) }; 和 {1,2} 返回结果一样; 里面的3只是执行，不返回给任何表达式使用
+
+			std::string out_str = s.str();
+			m_cb(lv, file, line, fun, out_str.c_str());
+			if (out_str.length() >= 1000)
+			{
+				m_cb(lv, file, line, fun, "-----------[before str too long，was truncated,actual len=%d]-----------\n");
+			}
+		}
 	private:
 		LogMgr() {};
 		static void DefaultPrintf(LogLv lv, const char *file, int line, const char *fun, const char * pattern);
 	};
+}
+
+template<class T> 
+std::stringstream& operator<<(std::stringstream& s, const std::vector<T> &vec)
+{
+	s << '[';
+	bool isFirst = true;
+	for (auto &v : vec)
+	{
+		if (!isFirst)
+		{
+			s << ", ";
+		}
+		s << v;
+		isFirst = false;
+	}
+	s << ']';
+	return s;
+}
+
+template<class K, class V>
+std::stringstream& operator<<(std::stringstream& s, const std::map<K,V> &map)
+{
+	s << '{';
+	bool isFirst = true;
+	for (auto &v : map)
+	{
+		if (!isFirst)
+		{
+			s << ", ";
+		}
+		s << v.first << "=" << v.second;
+		isFirst = false;
+	}
+	s << '}';
+	return s;
 }

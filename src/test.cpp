@@ -4,6 +4,7 @@
 #include "aoi/aoi.h"
 #include "aoi/GridIdxMgr.h"
 #include "CheckAoi.h"
+#include "aoi/log_def.h"
 
 using namespace std;
 using namespace aoi;
@@ -417,6 +418,7 @@ UNITTEST(test_update)
 //测试 随机进入场景， 随机移动
 UNITTEST(rand_update_pos)
 {
+	
 	GameScene *scene = new GameScene();
 	GameScene *scene2 = new GameScene();
 	PlayerMgr *mgr = new PlayerMgr();

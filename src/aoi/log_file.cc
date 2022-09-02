@@ -10,6 +10,7 @@ using namespace std;
 namespace aoi
 {
 
+
 	LogMgr & LogMgr::Ins()
 	{
 		static LogMgr d;
@@ -99,7 +100,7 @@ namespace aoi
 	void LogMgr::DefaultPrintf(LogLv lv, const char *file, int line, const char *fun, const char * pattern)
 	{
 		// 使用默认才创建s_log对象
-		static DefaultLog s_log;
+		static DefaultLog s_log(LogMgr::Ins().m_defaultFileName.c_str());
 		s_log.Printf(lv, file, line, fun, pattern);
 	}
 
@@ -109,7 +110,17 @@ namespace aoi
 	DefaultLog::DefaultLog(const char *fname)
 	{
 		m_file_name = fname;
-		OpenFile();
+		auto it = m_file_name.find('.');
+		if (it == std::string::npos)
+		{
+			m_prefixName = m_file_name;
+			m_suffixName = ".txt";
+		}
+		else
+		{
+			m_prefixName.assign(m_file_name.begin(), m_file_name.begin()+it);
+			m_suffixName.assign(m_file_name.begin()+it, m_file_name.end());
+		}
 	}
 
 
@@ -131,13 +142,13 @@ namespace aoi
 
 		//add time infomation
 		char time_str[1000];
-		{
-			time_t long_time;
-			time(&long_time);
-			tm   *now;
-			now = localtime(&long_time);
-			snprintf(time_str, sizeof(time_str), "[%04d-%02d-%02d %02d:%02d:%02d] ", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
-		}
+		
+		time_t long_time;
+		time(&long_time);
+		tm* pTm;
+		pTm = localtime(&long_time);
+		snprintf(time_str, sizeof(time_str), "[%04d-%02d-%02d %02d:%02d:%02d] ", pTm->tm_year + 1900, pTm->tm_mon + 1, pTm->tm_mday, pTm->tm_hour, pTm->tm_min, pTm->tm_sec);
+
 
 		string s;
 		s.append(time_str);
@@ -156,7 +167,21 @@ namespace aoi
 		s.append("\n");
 
 
-
+		if (m_lastYday != pTm->tm_year || m_lastYday != pTm->tm_yday)
+		{//write new file
+			m_lastYear = pTm->tm_year;
+			m_lastYday = pTm->tm_yday;
+			char log_file_name_tril[64];
+			snprintf(log_file_name_tril, sizeof(log_file_name_tril), "_%d_%2.2d_%2.2d",
+				pTm->tm_year +1900, pTm->tm_mon +1, pTm->tm_mday);
+			m_file_name = m_prefixName;
+			m_file_name += log_file_name_tril;
+			m_file_name += m_suffixName;
+			if (-1 == m_fd)
+			{
+				OpenFile();
+			}
+		}
 		bool is_exit = (access(m_file_name.c_str(), F_OK | W_OK) == 0);
 		if (!is_exit)
 		{
