@@ -142,12 +142,12 @@ SceneEntity::SceneEntity(Player &player)
 
 void SceneEntity::OnAddObserver(Entity &other)
 {
-	m_observers.insert(&other);
+	m_playerObservers.insert(&other);
 }
 
 void SceneEntity::OnDelObserver(Entity &other)
 {
-	m_observers.erase(&other);
+	m_playerObservers.erase(&other);
 }
 
 Player::Player()

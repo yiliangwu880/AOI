@@ -40,16 +40,37 @@ namespace aoi
 {
 	class Scene;
 	class Entity;
-
+	enum class EntityType
+	{
+		Player,
+		Npc,
+		Item,
+		Max,
+	};
+	//视野优先级，0最高
+	enum class ViewPriolity
+	{
+		Hight=0,
+		Friend=1,
+		Enemy=2,
+		Other = 3,
+		Max,
+	};
 	class Entity
 	{
 		friend class Scene;
 		friend class AoiTest;
 
+	public:
+		static const uint32_t MAX_SEE_PLAYER = 20;
+
+	private:
 		Scene * m_scene = nullptr;
-		std::set<Entity *> m_observers; //看见我的entity 集合
+		std::set<Entity *> m_playerObservers; //看见我的player entity 集合。 
+		uint32_t m_seePlayerNum = 0; //我 看到的 玩家数
 		uint16_t m_gridIdx = 0;			//当前所在格子索引
 		bool m_isFreeze = false;		//true 表示禁止m_observers变化。 防止野entity或者遍历过程修改容器
+		EntityType m_type = EntityType::Player;
 
 	public:
 		~Entity();
@@ -63,6 +84,8 @@ namespace aoi
 		virtual void OnAddObserver(const std::vector<Entity*>& vecOther); //vecOther 看见我. 目的一次调用处理，提高效率
 		virtual void OnDelObserver(Entity& other) = 0; //other 看不见我
 		virtual void OnDelObserver(const std::vector<Entity*>& vecOther); //vecOther 看不见我. 目的一次调用处理，提高效率
+		//看见 other的优先级
+		virtual ViewPriolity GetViewPriolity(Entity& other) { return ViewPriolity::Other; };
 
 	private:
 		void SetScene(Scene *scene) { m_scene = scene; }
@@ -79,9 +102,10 @@ namespace aoi
 		friend class Entity;
 		friend class AoiTest;
 		using VecEntity = std::vector<Entity *>;
+		using VecEntityArray = VecEntity [(uint32_t)EntityType::Max];
 
 		//map 类型，不用设置地图大小，自动调整需要的内存。 如果数组类型，需要设置地图大小，效率更高
-		std::map<uint16_t, VecEntity> m_idx2VecEntity;//gridIdx 2 entity. 表示一个grid的所有entity
+		std::map<uint16_t, VecEntityArray> m_idx2VecEntity;//gridIdx 2 entity. 表示一个grid的所有entity
 		bool m_isFreeze = false; //true 表示禁止entity gridIdx变化。 防止野entity或者遍历过程修改容器
 
 	public:

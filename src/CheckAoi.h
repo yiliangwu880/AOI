@@ -48,7 +48,7 @@ struct SceneEntity : public aoi::Entity
 {
 	Player &m_owner;
 	SceneEntity(Player &player);
-	std::set<Entity *> m_observers;
+	std::set<Entity *> m_playerObservers;
 
 	virtual void OnAddObserver(Entity &other); //entity 看见我
 	virtual void OnDelObserver(Entity &other); //entity 看不见我

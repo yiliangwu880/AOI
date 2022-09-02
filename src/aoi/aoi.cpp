@@ -59,7 +59,10 @@ void aoi::Entity::OnDelObserver(const std::vector<Entity*>& vecOther)
 void aoi::Entity::AddObserver(Entity &other)
 {
 	L_ASSERT(!m_isFreeze);
-	m_observers.insert(&other);
+	L_COND_V(m_seePlayerNum < (uint32_t)Entity::MAX_SEE_PLAYER, "abc %d %d", m_seePlayerNum, (uint32_t)Entity::MAX_SEE_PLAYER);
+	L_ASSERT(m_seePlayerNum < (uint32_t)Entity::MAX_SEE_PLAYER);
+	m_playerObservers.insert(&other);
+	other.m_seePlayerNum++;
 	OnAddObserver(other);
 }
 
@@ -68,7 +71,7 @@ void aoi::Entity::AddObserver(const std::vector<Entity*>& vecOther)
 	L_ASSERT(!m_isFreeze);
 	for (auto& i : vecOther)
 	{
-		m_observers.insert(i);
+		m_playerObservers.insert(i);
 	}
 	OnAddObserver(vecOther);
 }
@@ -76,7 +79,10 @@ void aoi::Entity::AddObserver(const std::vector<Entity*>& vecOther)
 void aoi::Entity::DelObserver(Entity &other)
 {
 	L_ASSERT(!m_isFreeze);
-	m_observers.erase(&other);
+	m_playerObservers.erase(&other);
+	other.m_seePlayerNum--;
+	L_ASSERT(other.m_seePlayerNum >= 0);
+	L_DEBUG("other.m_seePlayerNum=%d", other.m_seePlayerNum);
 	OnDelObserver(other);
 }
 
@@ -86,7 +92,7 @@ void aoi::Entity::DelObserver(const std::vector<Entity*>& vecOther)
 	L_ASSERT(!m_isFreeze);
 	for (auto& i : vecOther)
 	{
-		m_observers.erase(i);
+		m_playerObservers.erase(i);
 	}
 	OnDelObserver(vecOther);
 }
@@ -120,7 +126,7 @@ void aoi::Entity::ForEachObservers(std::function<void(Entity&)> f)
 	}
 	m_scene->Freeze(true);//不让scene改变状态，因为scene 改变会又机会改变 entity 状态
 	m_isFreeze = true;
-	for (Entity *p : m_observers)
+	for (Entity *p : m_playerObservers)
 	{
 		f(*p);//天知道里面做什么！所以冻结住才安全
 	}
@@ -131,9 +137,12 @@ void aoi::Entity::ForEachObservers(std::function<void(Entity&)> f)
 aoi::Scene::~Scene()
 {
 	VecEntity vec;
-	for (auto &v : m_idx2VecEntity)
+	for (auto& i : m_idx2VecEntity)
 	{
-		vec.insert(vec.end(), v.second.begin(), v.second.end());
+		for (VecEntity& v : i.second)
+		{
+			vec.insert(vec.end(), v.begin(), v.end());
+		}
 	}
 	for (Entity *entity : vec)
 	{
@@ -144,15 +153,19 @@ aoi::Scene::~Scene()
 size_t aoi::Scene::GetEntityNum()
 {
 	size_t num = 0;
-	for (auto &v : m_idx2VecEntity)
+	for (auto& i : m_idx2VecEntity)
 	{
-		num += v.second.size();
+		for (VecEntity& v : i.second)
+		{
+			num += v.size();
+		}
 	}
 	return num;
 }
 
 bool aoi::Scene::EntityEnter(Entity &entity)
 {
+	L_ASSERT((uint32_t)entity.m_type < (uint32_t)EntityType::Max);
 	L_COND(!m_isFreeze, false);//迭代m_observers 期间禁止调用， 用户设法延时调用吧。
 	m_isFreeze = true;
 	uint16_t gridIdx = entity.GridIdx();
@@ -160,14 +173,82 @@ bool aoi::Scene::EntityEnter(Entity &entity)
 	const VecGridIdx &ninescreen = GridIdxMgr::Ins().Get9Grid(gridIdx);
 	for ( const uint16_t &v : ninescreen)
 	{
-		for (Entity *otherEntity : m_idx2VecEntity[v])
-		{
-			L_ASSERT(otherEntity != &entity);
-			otherEntity->AddObserver(entity);
+#if 0
+		{//裁剪 entity see otherEntity
+			using PEntity = Entity*;
+			struct PriList
+			{
+				uint32_t num = 0;
+				PEntity entityList[Entity::MAX_SEE_PLAYER];
+			};
+			if (m_idx2VecEntity[v].size()< Entity::MAX_SEE_PLAYER+1)
+			{
+				//全部加
+				//return;
+			}
+			PriList priList[(uint32_t)ViewPriolity::Max];    //0是优先列表，1是friend，2是enemy
+			for (Entity* otherEntity : m_idx2VecEntity[v])
+			{
+				uint32_t idx = (uint32_t)entity.GetViewPriolity(*otherEntity);
+				PriList& d = priList[idx];
+				if (d.num >= (uint32_t)Entity::MAX_SEE_PLAYER)
+				{
+					continue;
+				}
+				L_ASSERT(idx < (uint32_t)ViewPriolity::Max);
+				d.entityList[d.num] = otherEntity;
+				d.num++;
+			}
+			uint32_t addNum = 0;
+			for (PriList& d : priList)
+			{
+				for (uint32_t i = 0; i < d.num ; i++)
+				{
+					d.entityList[d.num]->AddObserver(entity);
+					addNum++;
+					if (addNum>= (uint32_t)Entity::MAX_SEE_PLAYER)
+					{
+						break;
+					}
+				}
+				if (addNum >= (uint32_t)Entity::MAX_SEE_PLAYER)
+				{
+					break;
+				}
+			}
 		}
-		entity.AddObserver(m_idx2VecEntity[v]);
+		//otherEntity see entity
+		{
+			for (Entity* otherEntity : m_idx2VecEntity[v])
+			{
+				if (otherEntity->m_seePlayerNum < (uint32_t)Entity::MAX_SEE_PLAYER)
+				{
+					entity.AddObserver(*otherEntity);
+				}
+				else
+				{
+					//找低优先级替换。 还有处理离开视野。 先不做，太麻烦，不重要
+				}
+			}
+		}
+#endif // 0
+
+		
+#if 1
+		for (VecEntity& vec : m_idx2VecEntity[v])
+		{
+			for (Entity* otherEntity : vec)
+			{
+				L_ASSERT(otherEntity != &entity);
+
+				otherEntity->AddObserver(entity);
+			}
+			entity.AddObserver(vec);
+		}
+#endif // 0
+
 	}
-	m_idx2VecEntity[gridIdx].push_back(&entity);
+	m_idx2VecEntity[gridIdx][(uint32_t)entity.m_type].push_back(&entity);
 	entity.SetScene(this);
 	m_isFreeze = false;
 	return true;
@@ -184,21 +265,25 @@ bool aoi::Scene::EntityLeave(Entity &entity)
 	m_isFreeze = true;
 	uint16_t gridIdx = entity.GridIdx();
 
-	VecEntity &vecEntity = m_idx2VecEntity[gridIdx];
+	VecEntity &vecEntity = m_idx2VecEntity[gridIdx][(uint32_t)entity.m_type];
 	SimpleRemoveFromVec(vecEntity, &entity);
 	entity.SetScene(nullptr);
 
 	const VecGridIdx &ninescreen = GridIdxMgr::Ins().Get9Grid(gridIdx);
 	for (const uint16_t &v : ninescreen)
 	{
-		for (Entity *otherEntity : m_idx2VecEntity[v])
+		for (VecEntity& vec : m_idx2VecEntity[v])
 		{
-			L_ASSERT(otherEntity != &entity);
-			otherEntity->DelObserver(entity);
+			for (Entity* otherEntity : vec)
+			{
+
+				L_ASSERT(otherEntity != &entity);
+				otherEntity->DelObserver(entity);
+			}
+			entity.DelObserver(vec);
 		}
-		entity.DelObserver(m_idx2VecEntity[v]);
 	}
-	L_ASSERT(entity.m_observers.empty());
+	L_ASSERT(entity.m_playerObservers.empty());
 	m_isFreeze = false;
 	return true;
 }
@@ -213,15 +298,18 @@ bool aoi::Scene::UpdateEntity(Entity &entity, uint16_t oldGridIdx, uint16_t newG
 	{
 		uint8_t dir = GridIdxMgr::Ins().getScreenDirect(oldGridIdx, newGridIdx);
 		{
-			SimpleRemoveFromVec(m_idx2VecEntity[oldGridIdx], &entity);
+			SimpleRemoveFromVec(m_idx2VecEntity[oldGridIdx][(uint32_t)entity.m_type], &entity);
 			const VecGridIdx &vecGridIdx = GridIdxMgr::Ins().getReverseDirectScreen(oldGridIdx, dir);
 			for (uint16_t v : vecGridIdx)
 			{
-				for (Entity *otherEntity : m_idx2VecEntity[v])
+				for (VecEntity& vec : m_idx2VecEntity[v])
 				{
-					L_ASSERT(otherEntity != &entity);
-					otherEntity->DelObserver(entity);
-					entity.DelObserver(*otherEntity);
+					for (Entity* otherEntity : vec)
+					{
+						L_ASSERT(otherEntity != &entity);
+						otherEntity->DelObserver(entity);
+						entity.DelObserver(*otherEntity);
+					}
 				}
 			}
 		}
@@ -229,28 +317,34 @@ bool aoi::Scene::UpdateEntity(Entity &entity, uint16_t oldGridIdx, uint16_t newG
 			const VecGridIdx &vecGridIdx = GridIdxMgr::Ins().getDirectScreen(newGridIdx, dir);
 			for (uint16_t v : vecGridIdx)
 			{
-				for (Entity *otherEntity : m_idx2VecEntity[v])
+				for (VecEntity& vec : m_idx2VecEntity[v])
 				{
-					L_ASSERT(otherEntity != &entity);
-					otherEntity->AddObserver(entity);
-					entity.AddObserver(*otherEntity);
+					for (Entity* otherEntity : vec)
+					{
+						L_ASSERT(otherEntity != &entity);
+						otherEntity->AddObserver(entity);
+						entity.AddObserver(*otherEntity);
+					}
 				}
 			}
-			m_idx2VecEntity[newGridIdx].push_back(&entity);
+			m_idx2VecEntity[newGridIdx][(uint32_t)entity.m_type].push_back(&entity);
 		}
 	}
 	else
 	{
 		{
-			SimpleRemoveFromVec(m_idx2VecEntity[oldGridIdx], &entity);
+			SimpleRemoveFromVec(m_idx2VecEntity[oldGridIdx][(uint32_t)entity.m_type], &entity);
 			const VecGridIdx &vecGridIdx = GridIdxMgr::Ins().Get9Grid(oldGridIdx);
 			for (uint16_t v : vecGridIdx)
 			{
-				for (Entity *otherEntity : m_idx2VecEntity[v])
+				for (VecEntity& vec : m_idx2VecEntity[v])
 				{
-					L_ASSERT(otherEntity != &entity);
-					otherEntity->DelObserver(entity);
-					entity.DelObserver(*otherEntity);
+					for (Entity* otherEntity : vec)
+					{
+						L_ASSERT(otherEntity != &entity);
+						otherEntity->DelObserver(entity);
+						entity.DelObserver(*otherEntity);
+					}
 				}
 			}
 		}
@@ -260,15 +354,18 @@ bool aoi::Scene::UpdateEntity(Entity &entity, uint16_t oldGridIdx, uint16_t newG
 			//L_DEBUG("9 grid size=%d", vecGridIdx.size());
 			for (uint16_t v : vecGridIdx)
 			{
-				for (Entity *otherEntity : m_idx2VecEntity[v])
+				for (VecEntity& vec : m_idx2VecEntity[v])
 				{
-					//L_DEBUG("see eachother =%p %p", &entity, otherEntity);
-					L_ASSERT(otherEntity != &entity);
-					otherEntity->AddObserver(entity);
-					entity.AddObserver(*otherEntity);
+					for (Entity* otherEntity : vec)
+					{
+						//L_DEBUG("see eachother =%p %p", &entity, otherEntity);
+						L_ASSERT(otherEntity != &entity);
+						otherEntity->AddObserver(entity);
+						entity.AddObserver(*otherEntity);
+					}
 				}
 			}
-			m_idx2VecEntity[newGridIdx].push_back(&entity);
+			m_idx2VecEntity[newGridIdx][(uint32_t)entity.m_type].push_back(&entity);
 		}
 	}
 
