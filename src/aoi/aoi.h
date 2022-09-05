@@ -50,7 +50,6 @@ namespace aoi
 	//视野优先级，0最高
 	enum class ViewPriolity
 	{
-		Hight=0,
 		Friend=1,
 		Enemy=2,
 		Other = 3,
@@ -62,7 +61,7 @@ namespace aoi
 		friend class AoiTest;
 
 	public:
-		static const uint32_t MAX_SEE_PLAYER = 20000;
+		static const uint32_t MAX_SEE_PLAYER = 20;
 
 	private:
 		Scene * m_scene = nullptr;
@@ -89,6 +88,7 @@ namespace aoi
 		void SetScene(Scene *scene) { m_scene = scene; }
 		void AddObserver(Entity &other);//entity看见我
 		void DelObserver(Entity& other);//entity看不见我
+		void TryAddObserver(Entity& other);//player之间加视野，超数量尝试裁剪
 		uint16_t GridIdx() const { return m_gridIdx; }
 		Scene *GetScene() const { return m_scene; }
 	};
