@@ -61,7 +61,7 @@ namespace aoi
 		friend class AoiTest;
 
 	public:
-		static const uint32_t MAX_SEE_PLAYER = 20;
+		static const uint32_t MAX_SEE_PLAYER = 10;
 
 	private:
 		Scene * m_scene = nullptr;
@@ -87,7 +87,7 @@ namespace aoi
 	private:
 		void SetScene(Scene *scene) { m_scene = scene; }
 		void AddObserver(Entity &other);//entity看见我
-		void DelObserver(Entity& other);//entity看不见我
+		void TryDelObserver(Entity& other);//entity看不见我
 		void TryAddObserver(Entity& other);//player之间加视野，超数量尝试裁剪
 		uint16_t GridIdx() const { return m_gridIdx; }
 		Scene *GetScene() const { return m_scene; }
@@ -101,7 +101,8 @@ namespace aoi
 		using VecEntityArray = VecEntity [(uint32_t)EntityType::Max];
 
 		//map 类型，不用设置地图大小，自动调整需要的内存。 如果数组类型，需要设置地图大小，效率更高
-		std::map<uint16_t, VecEntityArray> m_idx2VecEntityArray;//gridIdx 2 entity. 表示一个grid的所有entity
+		//gridIdx 2 entity. 表示一个grid的所有entity. 例如 m_idx2VecEntityArray[gridIdx][EntityType] == 某格子，某类型的所有entity
+		std::map<uint16_t, VecEntityArray> m_idx2VecEntityArray;
 		bool m_isFreeze = false; //true 表示禁止entity gridIdx变化。 防止野entity或者遍历过程修改容器
 
 	public:
@@ -111,8 +112,13 @@ namespace aoi
 		size_t GetEntityNum(); //for test use
 		bool EntityEnter(Entity &entity);
 		bool EntityLeave(Entity &entity);
-		bool UpdateEntity(Entity &entity, uint16_t oldGridIdx, uint16_t newGridIdx); //entity gridIdx 发生变化
-		
+		bool UpdateEntity(Entity& entity, uint16_t oldGridIdx, uint16_t newGridIdx); //entity gridIdx 发生变化
+
+		//player 之间 可视数量裁剪
+		//@entity 更新视野玩家
+		//@vecAllPlayer entity视野内其他玩家
+		void CalPlayerObserver(Entity& entity, const VecEntity& vecAllPlayer);
+
 		bool Freeze() const { return m_isFreeze; }
 		void Freeze(bool val) { m_isFreeze = val; }
 	};

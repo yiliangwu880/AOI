@@ -275,6 +275,7 @@ uint32_t PlayerMgr::Check(Player &player)
 		UNIT_ASSERT(aoi_set.find(g_entity) != aoi_set.end());
 		cnt++;
 	}
+	LDEBUG("aoi_set.size(), 9 grid cnt", aoi_set.size(), cnt);
 	UNIT_ASSERT(aoi_set.size() == cnt);
 	return aoi_set.size();
 }
