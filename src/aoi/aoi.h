@@ -135,5 +135,9 @@ namespace aoi
 		{
 			return scene.GetEntityNum();
 		}
+		static uint32_t GetEntitySeePlayerNum(Entity& entity)
+		{
+			return entity.m_seePlayerNum;
+		}
 	};
 }

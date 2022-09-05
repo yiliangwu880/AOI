@@ -229,7 +229,7 @@ uint32_t PlayerMgr::Check(Player &player)
 		}
 	}
 
-	set<aoi::Entity *> aoi_set;
+	set<aoi::Entity *> aoi_set;//player.m_entity 视野 目标数量
 	{
 		auto f = [&aoi_set](Entity& other)
 		{
@@ -237,46 +237,58 @@ uint32_t PlayerMgr::Check(Player &player)
 		};
 		player.m_entity.ForEachObservers(f);
 	}
-	uint32_t cnt = 0;
-	for (aoi::Entity *g_entity : g_set)
-	{
-		if (g_entity == &player.m_entity)
+
+	{//aoi_set 必须为 g_set子集
+		for (auto i : aoi_set)
 		{
-			continue;
+			UNIT_ASSERT(g_set.find(i) != g_set.end());
 		}
-#if 0
-		{//for test
-			if (aoi_set.find(g_entity) == aoi_set.end())//when error
-			{
-				UNIT_INFO("player id=%d, gridIdx=%d x,y=%d, %d", player.m_id, player.m_entity.GridIdx(), player.m_x, player.m_y);
-				uint16_t x, y;
-				Check::Ins().GetGridXY(player.m_entity.GridIdx(), x, y);
-				UNIT_INFO("gridXY = %d %d", x, y);
-				//UNIT_INFO("aoi_set size, g_set size=%d %d", aoi_set.size(), g_set.size());
-
-				SceneEntity *sceneEntity = dynamic_cast<SceneEntity *>(g_entity);
-				//UNIT_INFO("g_set entity scene = %p", sceneEntity->GetScene());
-				UNIT_INFO("g_set entity id=%d, gridIdx=%d x,y=%d, %d", sceneEntity->m_owner.m_id, g_entity->GridIdx(), sceneEntity->m_owner.m_x, sceneEntity->m_owner.m_y);
-				Check::Ins().GetGridXY(g_entity->GridIdx(), x, y);
-				UNIT_INFO("gridXY = %d %d", x, y);
-				//UNIT_INFO("g_set player  = %p", &sceneEntity->m_owner);
-
-				for (aoi::Entity *aoi_entity : aoi_set)
-				{
-					SceneEntity *sceneEntity = dynamic_cast<SceneEntity *>(aoi_entity);
-					UNIT_INFO("aoi entity id=%d, gridIdx=%d x,y=%d, %d", sceneEntity->m_owner.m_id, aoi_entity->GridIdx(), sceneEntity->m_owner.m_x, sceneEntity->m_owner.m_y);
-					uint16_t x, y;
-					Check::Ins().GetGridXY(aoi_entity->GridIdx(), x, y);
-					UNIT_INFO("gridXY = %d %d", x, y);
-				}
-			}	
-		}
-#endif
-		UNIT_ASSERT(aoi_set.find(g_entity) != aoi_set.end());
-		cnt++;
 	}
-	LDEBUG("aoi_set.size(), 9 grid cnt", aoi_set.size(), cnt);
-	UNIT_ASSERT(aoi_set.size() == cnt);
+
+	if (Entity::MAX_SEE_PLAYER > 100) //最大可视玩家数量过大，忽略裁剪。当全部都看到测试
+	{
+		uint32_t cnt = 0;
+		for (aoi::Entity *g_entity : g_set)
+		{
+			if (g_entity == &player.m_entity)
+			{
+				continue;
+			}
+	#if 0
+			{//for test
+				if (aoi_set.find(g_entity) == aoi_set.end())//when error
+				{
+					UNIT_INFO("player id=%d, gridIdx=%d x,y=%d, %d", player.m_id, player.m_entity.GridIdx(), player.m_x, player.m_y);
+					uint16_t x, y;
+					Check::Ins().GetGridXY(player.m_entity.GridIdx(), x, y);
+					UNIT_INFO("gridXY = %d %d", x, y);
+					//UNIT_INFO("aoi_set size, g_set size=%d %d", aoi_set.size(), g_set.size());
+
+					SceneEntity *sceneEntity = dynamic_cast<SceneEntity *>(g_entity);
+					//UNIT_INFO("g_set entity scene = %p", sceneEntity->GetScene());
+					UNIT_INFO("g_set entity id=%d, gridIdx=%d x,y=%d, %d", sceneEntity->m_owner.m_id, g_entity->GridIdx(), sceneEntity->m_owner.m_x, sceneEntity->m_owner.m_y);
+					Check::Ins().GetGridXY(g_entity->GridIdx(), x, y);
+					UNIT_INFO("gridXY = %d %d", x, y);
+					//UNIT_INFO("g_set player  = %p", &sceneEntity->m_owner);
+
+					for (aoi::Entity *aoi_entity : aoi_set)
+					{
+						SceneEntity *sceneEntity = dynamic_cast<SceneEntity *>(aoi_entity);
+						UNIT_INFO("aoi entity id=%d, gridIdx=%d x,y=%d, %d", sceneEntity->m_owner.m_id, aoi_entity->GridIdx(), sceneEntity->m_owner.m_x, sceneEntity->m_owner.m_y);
+						uint16_t x, y;
+						Check::Ins().GetGridXY(aoi_entity->GridIdx(), x, y);
+						UNIT_INFO("gridXY = %d %d", x, y);
+					}
+				}	
+			}
+	#endif
+			//LDEBUG("aoi_set.szie()", aoi_set.size());
+			UNIT_ASSERT(aoi_set.find(g_entity) != aoi_set.end()); 
+			cnt++;
+		}
+		//LDEBUG("aoi_set.size(), 9 grid cnt", aoi_set.size(), cnt);
+		UNIT_ASSERT(aoi_set.size() == cnt);
+	}
 	return aoi_set.size();
 }
 

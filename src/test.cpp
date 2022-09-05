@@ -285,36 +285,47 @@ UNITTEST(enter_update)
 
 	uint16_t x= 371, y= 2014;//gridxy = 16, 143
 	uint16_t gridX, gridY;
-	Check::Ins().GetGridXY(371, 2014, gridX, gridY);
+	Check::Ins().GetGridXY(x, y, gridX, gridY);
 
 	mgr->m_id2Player.insert(make_pair(1, Player(1)));
 	mgr->m_id2Player.insert(make_pair(2, Player(2)));
 	mgr->m_id2Player.insert(make_pair(3, Player(3)));
-
+	//LDEBUG("1,2,3=", &(mgr->GetPlayer(1)->m_entity), &(mgr->GetPlayer(2)->m_entity), &(mgr->GetPlayer(3)->m_entity));
 	mgr->GetPlayer(1)->Enter(*scene, x, y);
 	mgr->GetPlayer(2)->Enter(*scene, x + SCREEN_GRID_WIDTH, y);
-	mgr->GetPlayer(3)->Enter(*scene, x + SCREEN_GRID_WIDTH*3, y);
+	mgr->GetPlayer(3)->Enter(*scene, x + SCREEN_GRID_WIDTH * 3, y);
+	UNIT_ASSERT(AoiTest::GetEntitySeePlayerNum(mgr->GetPlayer(2)->m_entity) == 1);
 	UNIT_ASSERT(mgr->Check(1) == 1);
 	UNIT_ASSERT(mgr->Check(2) == 1);
 	UNIT_ASSERT(mgr->Check(3) == 0);
 	mgr->Check();
 
 	mgr->GetPlayer(1)->UpdateXY(x, y);
+	UNIT_ASSERT(AoiTest::GetEntitySeePlayerNum(mgr->GetPlayer(2)->m_entity) == 1);
+	//LDEBUG("1");
 	mgr->GetPlayer(2)->UpdateXY(x, y);
+	//LDEBUG("seePlayerNum=", AoiTest::GetEntitySeePlayerNum(mgr->GetPlayer(2)->m_entity));
+	UNIT_ASSERT(AoiTest::GetEntitySeePlayerNum(mgr->GetPlayer(2)->m_entity) == 1);
+	//LDEBUG("3 update xy");
 	mgr->GetPlayer(3)->UpdateXY(x, y);
 	UNIT_ASSERT(mgr->Check(1) == 2);
 	UNIT_ASSERT(mgr->Check(2) == 2);
 	UNIT_ASSERT(mgr->Check(3) == 2);
 	mgr->Check();
+	UNIT_ASSERT(AoiTest::GetEntitySeePlayerNum(mgr->GetPlayer(2)->m_entity) == 2);
 
 	//站位 ：对角线排列 
 	mgr->GetPlayer(1)->UpdateXY(x + SCREEN_GRID_WIDTH, y+ SCREEN_GRID_HEIGHT);
-	mgr->GetPlayer(2)->UpdateXY(x , y );
-	mgr->GetPlayer(3)->UpdateXY(x - SCREEN_GRID_WIDTH , y - SCREEN_GRID_HEIGHT);
+	mgr->GetPlayer(2)->UpdateXY(x, y);
+	UNIT_ASSERT(AoiTest::GetEntitySeePlayerNum(mgr->GetPlayer(1)->m_entity) == 2);
+	mgr->GetPlayer(3)->UpdateXY(x - SCREEN_GRID_WIDTH, y - SCREEN_GRID_HEIGHT);
+	UNIT_ASSERT(AoiTest::GetEntitySeePlayerNum(mgr->GetPlayer(1)->m_entity) == 1);
 	UNIT_ASSERT(mgr->Check(1) == 1);
 	UNIT_ASSERT(mgr->Check(2) == 2);
 	UNIT_ASSERT(mgr->Check(3) == 1);
 	mgr->Check();
+	UNIT_ASSERT(AoiTest::GetEntitySeePlayerNum(mgr->GetPlayer(1)->m_entity) == 1);
+	UNIT_ASSERT(AoiTest::GetEntitySeePlayerNum(mgr->GetPlayer(2)->m_entity) == 2);
 
 	mgr->GetPlayer(2)->UpdateXY(x - SCREEN_GRID_WIDTH*2, y - SCREEN_GRID_HEIGHT*2);
 	UNIT_ASSERT(mgr->Check(1) == 0);
@@ -372,6 +383,7 @@ UNITTEST(enter_update)
 	mgr->Check();
 
 	mgr->GetPlayer(1)->Enter(*scene, x + SCREEN_GRID_WIDTH, y + SCREEN_GRID_HEIGHT);
+	//LDEBUG("1, 2 eePlayerNum=", AoiTest::GetEntitySeePlayerNum(mgr->GetPlayer(2)->m_entity));
 	mgr->GetPlayer(2)->Enter(*scene, x, y);
 	mgr->GetPlayer(3)->Enter(*scene, x - SCREEN_GRID_WIDTH, y - SCREEN_GRID_HEIGHT);
 	UNIT_ASSERT(mgr->Check(1) == 1);

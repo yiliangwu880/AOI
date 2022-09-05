@@ -89,18 +89,28 @@ bool aoi::Entity::Leave()
 	return m_scene->EntityLeave(*this);
 }
 
-
+//void ErrorFun()
+//{
+//
+//}
 void aoi::Entity::AddObserver(Entity &other)
 {
-	{//check error code
-		if (other.m_type == EntityType::Player)
-		{
-			L_ASSERT(other.m_seePlayerNum < (uint32_t)Entity::MAX_SEE_PLAYER, other.m_seePlayerNum, (uint32_t)Entity::MAX_SEE_PLAYER);
-		}
-	}
+	//{//check error code
+	//	if (other.m_type == EntityType::Player)
+	//	{
+	//		if (other.m_seePlayerNum >= (uint32_t)Entity::MAX_SEE_PLAYER)
+	//		{
+	//			ErrorFun();
+	//		}
+	//		L_ASSERT(other.m_seePlayerNum < (uint32_t)Entity::MAX_SEE_PLAYER, other.m_seePlayerNum, (uint32_t)Entity::MAX_SEE_PLAYER);
+	//	}
+	//}
 
 	L_ASSERT(!m_isFreeze);
-	m_playerObservers.insert(&other);
+	if (!m_playerObservers.insert(&other).second)
+	{
+		return;
+	}
 	other.m_seePlayerNum++;
 	//LDEBUG("AddObserver other.m_seePlayerNum=", other.m_seePlayerNum, "other=", &other, "this=", this);
 	OnAddObserver(other);
@@ -116,7 +126,7 @@ void aoi::Entity::TryDelObserver(Entity &other)
 	}
 	other.m_seePlayerNum--;
 	L_ASSERT(other.m_seePlayerNum >= 0);
-	//LDEBUG("DelObserver other.m_seePlayerNum=", other.m_seePlayerNum, "other=", &other, "this=", this);
+	//LDEBUG("dec seenum", &other, other.m_seePlayerNum);
 	OnDelObserver(other);
 }
 
@@ -290,9 +300,9 @@ bool aoi::Scene::EntityEnter(Entity &entity)
 
 	const VecGridIdx &ninescreen = GridIdxMgr::Ins().Get9Grid(gridIdx);
 	VecEntity vecAllPlayer;
+	//LDEBUG(&entity, "enter");
 	for ( const uint16_t &v : ninescreen)
 	{
-#if 1
 		for (uint32_t i=0; i< (uint32_t)EntityType::Max; ++i)
 		{
 			const VecEntity& vec = m_idx2VecEntityArray[v][i];
@@ -300,6 +310,7 @@ bool aoi::Scene::EntityEnter(Entity &entity)
 			{//player之间先记录，后续再处理
 				for (Entity* otherEntity : vec)
 				{
+					//LDEBUG("add vecAllPlayer", otherEntity);
 					vecAllPlayer.push_back(otherEntity);
 					entity.TryAddObserver(*otherEntity);
 				}
@@ -321,30 +332,24 @@ bool aoi::Scene::EntityEnter(Entity &entity)
 				}
 			}
 		}
-		if (vecAllPlayer.size() <= Entity::MAX_SEE_PLAYER)//大概率不超，快速执行全部加
+	}
+	if (vecAllPlayer.size() <= Entity::MAX_SEE_PLAYER)//大概率不超，快速执行全部加
+	{
+		//{//tmp code
+		//	if (!vecAllPlayer.empty())
+		//	{
+		//		LDEBUG("start easy add");
+		//	}
+		//}
+		for (auto i : vecAllPlayer)
 		{
-			for (auto& i : vecAllPlayer)
-			{
-				i->AddObserver(entity);
-			}
+		//	LDEBUG(i, "AddObserver", &entity);
+			i->AddObserver(entity);
 		}
-		else
-		{
-			CalPlayerObserver(entity, vecAllPlayer);
-		}
-		
-#else //无裁剪，进入9格内都互相看得见
-		for (VecEntity& vec : m_idx2VecEntityArray[v])
-		{
-			for (Entity* otherEntity : vec)
-			{
-				L_ASSERT(otherEntity != &entity);
-				otherEntity->AddObserver(entity);
-				entity.AddObserver(*otherEntity);
-			}
-		}
-#endif // 0
-
+	}
+	else
+	{
+		CalPlayerObserver(entity, vecAllPlayer);
 	}
 	m_idx2VecEntityArray[gridIdx][(uint32_t)entity.m_type].push_back(&entity);
 	entity.SetScene(this);
@@ -354,6 +359,7 @@ bool aoi::Scene::EntityEnter(Entity &entity)
 
 bool aoi::Scene::EntityLeave(Entity &entity)
 {
+	//LDEBUG("EntityLeave");
 	L_COND(!m_isFreeze, false); //迭代m_observers 期间禁止调用， 用户设法延时调用吧。
 	if (!entity.GetScene())
 	{
@@ -377,6 +383,7 @@ bool aoi::Scene::EntityLeave(Entity &entity)
 				L_ASSERT(otherEntity != &entity);
 				otherEntity->TryDelObserver(entity);
 				entity.TryDelObserver(*otherEntity);
+				//LDEBUG("otherEntity->TryDelObserver");
 			}
 		}
 	}
@@ -393,6 +400,7 @@ bool aoi::Scene::UpdateEntity(Entity &entity, uint16_t oldGridIdx, uint16_t newG
 	m_isFreeze = true;
 	if (GridIdxMgr::Ins().checkTwoPosIInNine(oldGridIdx, newGridIdx))
 	{
+	//	LDEBUG(&entity, "update in nine");
 		uint8_t dir = GridIdxMgr::Ins().getScreenDirect(oldGridIdx, newGridIdx);
 		{//互相删旧区域，现在变不可见视野
 			SimpleRemoveFromVec(m_idx2VecEntityArray[oldGridIdx][(uint32_t)entity.m_type], &entity);
@@ -406,6 +414,7 @@ bool aoi::Scene::UpdateEntity(Entity &entity, uint16_t oldGridIdx, uint16_t newG
 						L_ASSERT(otherEntity != &entity);
 						otherEntity->TryDelObserver(entity);
 						entity.TryDelObserver(*otherEntity);
+						//LDEBUG("del each", otherEntity, &entity);
 					}
 				}
 			}
@@ -421,6 +430,7 @@ bool aoi::Scene::UpdateEntity(Entity &entity, uint16_t oldGridIdx, uint16_t newG
 					{
 						for (Entity* otherEntity : vec)
 						{
+							L_ASSERT(otherEntity != &entity);
 							//otherEntity.TryAddObserver(*entity); //entity视野延后裁剪处理
 							entity.TryAddObserver(*otherEntity);
 						}
@@ -455,13 +465,18 @@ bool aoi::Scene::UpdateEntity(Entity &entity, uint16_t oldGridIdx, uint16_t newG
 				const VecEntity& vec = m_idx2VecEntityArray[v][(uint32_t)EntityType::Player];
 				for (Entity* otherEntity : vec)
 				{
-					vecAllPlayer.push_back(otherEntity);
+					if (otherEntity != &entity)
+					{
+					//	LDEBUG("vecAllPlayer.push_back", otherEntity);
+						vecAllPlayer.push_back(otherEntity);
+					}
 				}
 			}
 			if (vecAllPlayer.size() <= Entity::MAX_SEE_PLAYER)//大概率不超，快速执行全部加
 			{
-				for (auto& i : vecAllPlayer)
+				for (auto i : vecAllPlayer)
 				{
+				//	LDEBUG(i, "AddObserver", &entity);
 					i->AddObserver(entity);
 				}
 			}
@@ -473,6 +488,7 @@ bool aoi::Scene::UpdateEntity(Entity &entity, uint16_t oldGridIdx, uint16_t newG
 	}
 	else
 	{
+		//LDEBUG(&entity, "update not in nine");
 		{//互相删旧区域，现在变不可见视野
 			SimpleRemoveFromVec(m_idx2VecEntityArray[oldGridIdx][(uint32_t)entity.m_type], &entity);
 			for (uint16_t v : GridIdxMgr::Ins().Get9Grid(oldGridIdx))
