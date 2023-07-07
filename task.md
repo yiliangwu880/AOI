@@ -1,4 +1,4 @@
-# 功能
+ # 功能
 	裁剪，优先级：比如好友，敌人。。
 	
 	Scene 动态格子：分类存放 player,monster,item
